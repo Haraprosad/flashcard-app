@@ -1,6 +1,6 @@
 # TASKS.md — Flashcard App
 > Track progress here. Check boxes as you complete tasks. Never mark a task done until `npm run test:all` passes.
-> Last updated: start of project
+> Last updated: 2026-05-15
 
 ---
 
@@ -15,47 +15,47 @@
 ## Phase 0: Project Scaffolding
 
 ### 0.1 Init & Tooling
-- [ ] `npm create vite@latest flashcard-app -- --template react-ts`
-- [ ] Install Tailwind CSS v3 and configure `tailwind.config.ts`
-- [ ] Install all dependencies from spec section 2
-  - [ ] `zustand`, `idb`, `ts-fsrs`, `react-swipeable`, `framer-motion`
-  - [ ] `@react-oauth/google`
-  - [ ] `react-router-dom`
-  - [ ] `vitest`, `@testing-library/react`, `@testing-library/user-event`
-  - [ ] `@cucumber/cucumber`, `ts-node`
-  - [ ] `playwright`, `@playwright/test`
-- [ ] Install design skills (run in terminal):
-  - [ ] `npx skills add pbakaus/impeccable`
-  - [ ] `npx skills add anthropics/frontend-design`
-  - [ ] `git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill && cp -r ...`
-  - [ ] `npx @21st-dev/cli@latest install claude --api-key YOUR_KEY`
-  - [ ] `npx skillfish add carlosverasteguii/daticket framer-motion`
-  - [ ] `git clone https://github.com/Community-Access/accessibility-agents`
-- [ ] Create `CLAUDE.md` in project root (copy from `docs/CLAUDE.md`)
+- [x] `npm create vite@latest flashcard-app -- --template react-ts`
+- [x] Install Tailwind CSS v3 and configure `tailwind.config.ts`
+- [x] Install all dependencies from spec section 2
+  - [x] `zustand`, `idb`, `ts-fsrs`, `react-swipeable`, `framer-motion`
+  - [x] `@react-oauth/google`
+  - [x] `react-router-dom`
+  - [x] `vitest`, `@testing-library/react`, `@testing-library/user-event`
+  - [x] `@cucumber/cucumber`, `ts-node`
+  - [x] `playwright`, `@playwright/test`
+- [~] Install design skills (run in terminal):
+  - [x] `npx skills add pbakaus/impeccable`
+  - [!] `npx skills add anthropics/frontend-design` — repo not found (private/nonexistent)
+  - [x] `git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill && cp -r ...`
+  - [!] `npx skillfish add carlosverasteguii/daticket framer-motion` — daticket not in registry; installed framer-motion-animator as substitute
+  - [x] `npx @21st-dev/cli@latest install claude --api-key YOUR_KEY`
+  - [x] `git clone https://github.com/Community-Access/accessibility-agents`
+- [x] Create `CLAUDE.md` in project root (copy from `docs/CLAUDE.md`)
 - [ ] Run `/impeccable teach` and commit `.impeccable.md`
 
 ### 0.2 Project Structure
-- [ ] Create folder structure per spec section 12
-  - [ ] `features/` with `step_definitions/` and `support/`
-  - [ ] `e2e/`
-  - [ ] `src/types/`, `src/components/`, `src/pages/`, `src/stores/`, `src/services/`, `src/hooks/`
-- [ ] Create `src/types/index.ts` with all interfaces from spec section 5
-  - [ ] `FlashcardsIndex`, `TopicMeta`
-  - [ ] `TopicFile`, `FlashCard`
-  - [ ] `SRState`, `CardSRData`
-  - [ ] `Rating` enum
-- [ ] Create `cucumber.js` config
-- [ ] Create `vitest.config.ts`
-- [ ] Create `playwright.config.ts`
-- [ ] Verify `npm run test:bdd` runs (0 scenarios is fine)
-- [ ] Verify `npm run test` runs (0 tests is fine)
+- [x] Create folder structure per spec section 12
+  - [x] `features/` with `step_definitions/` and `support/`
+  - [x] `e2e/`
+  - [x] `src/types/`, `src/components/`, `src/pages/`, `src/stores/`, `src/services/`, `src/hooks/`
+- [x] Create `src/types/index.ts` with all interfaces from spec section 5
+  - [x] `FlashcardsIndex`, `TopicMeta`
+  - [x] `TopicFile`, `FlashCard`
+  - [x] `SRState`, `CardSRData`
+  - [x] `Rating` enum
+- [x] Create `cucumber.js` config (as `cucumber.cjs`)
+- [x] Create `vitest.config.ts`
+- [x] Create `playwright.config.ts`
+- [x] Verify `npm run test:bdd` runs (0 scenarios is fine)
+- [x] Verify `npm run test` runs (0 tests is fine)
 
 ### 0.3 Environment & Config
-- [ ] Create `.env.local` with `VITE_GOOGLE_CLIENT_ID`
-- [ ] Create `.env.example` (no secrets)
-- [ ] Create `netlify.toml` (from spec section 13)
-- [ ] Create `docs/` folder and move all spec docs in
-- [ ] Init git repo and make first commit
+- [x] Create `.env.local` with `VITE_GOOGLE_CLIENT_ID`
+- [x] Create `.env.example` (no secrets)
+- [x] Create `netlify.toml` (from spec section 13)
+- [x] Create `docs/` folder and move all spec docs in
+- [x] Init git repo and make first commit
 
 ---
 
@@ -64,41 +64,41 @@
 > BDD: write `features/auth.feature` first, see RED, then implement.
 
 ### 1.1 Feature File
-- [ ] Write `features/auth.feature` (all scenarios from BDD-WORKFLOW.md)
-- [ ] Run `npm run test:bdd` → confirm RED (undefined steps)
+- [x] Write `features/auth.feature` (all scenarios from BDD-WORKFLOW.md)
+- [x] Run `npm run test:bdd` → confirm RED (undefined steps)
 
 ### 1.2 Step Definitions
-- [ ] Write `features/step_definitions/auth.steps.ts`
-- [ ] Run `npm run test:bdd` → confirm RED (pending)
+- [x] Write `features/step_definitions/auth.steps.tsx`
+- [x] Run `npm run test:bdd` → confirm RED (pending)
 
 ### 1.3 Implementation
-- [ ] Create `src/stores/authStore.ts`
-  - [ ] `accessToken: string | null`
-  - [ ] `userEmail: string | null`
-  - [ ] `signIn()`, `signOut()`
-  - [ ] Token in memory ONLY — never write to localStorage
-- [ ] Create `src/hooks/useAuth.ts`
-- [ ] Install and configure `@react-oauth/google` in `src/main.tsx`
-- [ ] Build `src/components/GoogleSignInButton.tsx`
-  - [ ] `/frontend-design /daticket` — apply design system
-  - [ ] Google icon (SVG), DM Sans font, dark theme
-  - [ ] Framer Motion press animation
-  - [ ] `/accessibility-review` before done
-- [ ] Build `src/pages/LoginPage.tsx`
-  - [ ] Full-page centered layout
-  - [ ] App name in DM Serif Display
-  - [ ] Tagline: "Your Obsidian notes, as flashcards"
-  - [ ] GoogleSignInButton
-  - [ ] `/accessibility-review`
-- [ ] Wire up protected routes in `src/router.tsx`
-  - [ ] `/` redirects to `/topics` if auth, else `/login`
-  - [ ] All routes except `/login` require auth
-- [ ] Run `npm run test:bdd` → GREEN
-- [ ] Run `npm run test` → GREEN
+- [x] Create `src/stores/authStore.ts`
+  - [x] `accessToken: string | null`
+  - [x] `userEmail: string | null`
+  - [x] `signIn()`, `signOut()`
+  - [x] Token in memory ONLY — never write to localStorage
+- [x] Create `src/hooks/useAuth.ts`
+- [x] Install and configure `@react-oauth/google` in `src/main.tsx`
+- [x] Build `src/components/GoogleSignInButton.tsx`
+  - [x] `/frontend-design /daticket` — apply design system
+  - [x] Google icon (SVG), DM Sans font, dark theme
+  - [x] Framer Motion press animation
+  - [x] `/accessibility-review` before done
+- [x] Build `src/pages/LoginPage.tsx`
+  - [x] Full-page centered layout
+  - [x] App name in DM Serif Display
+  - [x] Tagline: "Your Obsidian notes, as flashcards"
+  - [x] GoogleSignInButton
+  - [x] `/accessibility-review`
+- [x] Wire up protected routes in `src/router.tsx`
+  - [x] `/` redirects to `/topics` if auth, else `/login`
+  - [x] All routes except `/login` require auth
+- [x] Run `npm run test:bdd` → GREEN
+- [x] Run `npm run test` → GREEN
 
 ### 1.4 Refactor
-- [ ] Extract token refresh logic to `src/services/authService.ts`
-- [ ] Add error boundary for auth failures
+- [x] Extract token refresh logic to `src/services/authService.ts`
+- [x] Add error boundary for auth failures
 
 ---
 
