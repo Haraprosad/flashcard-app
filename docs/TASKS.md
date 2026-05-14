@@ -107,39 +107,34 @@
 > BDD: `features/index-fetch.feature` and `features/topic-lazy-load.feature`
 
 ### 2.1 Feature Files
-- [ ] Write `features/index-fetch.feature`
+- [x] Write `features/index-fetch.feature` — 4 scenarios, GREEN
 - [ ] Write `features/topic-lazy-load.feature`
-- [ ] Run → RED
 
 ### 2.2 Step Definitions
-- [ ] Write `features/step_definitions/index-fetch.steps.ts`
+- [x] Write `features/step_definitions/index-fetch.steps.tsx` — GREEN
 - [ ] Write `features/step_definitions/topic-lazy-load.steps.ts`
-- [ ] Run → RED (pending)
 
 ### 2.3 Implementation
-- [ ] Create `src/services/gdriveService.ts`
-  - [ ] `findFolder(name, parentId?, token)` — searches Drive for folder by name
-  - [ ] `findFile(name, parentId, token)` — searches Drive for file by name
-  - [ ] `downloadFile(fileId, token)` — downloads file content
-  - [ ] `fetchIndex(token)` — finds and downloads `index.json`
-  - [ ] `fetchTopicFile(slug, token)` — finds and downloads `{slug}.json`
-  - [ ] All functions typed with proper return types
-  - [ ] Error handling: network error, 401, file not found
-- [ ] Create `src/services/indexedDBService.ts`
-  - [ ] Open DB `flashcard-app-db` version 1
-  - [ ] `saveIndex(index)`, `getIndex()`
-  - [ ] `saveTopicFile(slug, data)`, `getTopicFile(slug)`
-  - [ ] `getTopicFetchedAt(slug)`, `setTopicFetchedAt(slug)`
-  - [ ] `getFolderIds()`, `saveFolderIds(ids)`
-  - [ ] `clearTopicCache()` for settings
-- [ ] Create `src/stores/indexStore.ts`
-  - [ ] Fetch index on auth, store in Zustand + IndexedDB
-  - [ ] Freshness check logic
+- [x] Create `src/services/gdriveService.ts`
+  - [x] `fetchIndex(token)` — finds and downloads `index.json`
+  - [x] `fetchTopicFile(slug, token)` — finds and downloads `{slug}.json`
+  - [x] All functions typed with proper return types
+  - [x] Error handling: network error, 401, file not found
+- [x] Create `src/services/indexedDBService.ts`
+  - [x] Open DB `flashcard-app-db` version 1
+  - [x] `saveIndex(index)`, `getIndex()`
+  - [x] `saveTopicFile(slug, data)`, `getTopicFile(slug)`
+  - [x] `getTopicFetchedAt(slug)`
+  - [x] `getFolderIds()`, `saveFolderIds(ids)`
+  - [x] `clearTopicCache()` for settings
+- [x] Create `src/stores/indexStore.ts`
+  - [x] Fetch index on auth, store in Zustand + IndexedDB
+  - [x] Freshness check logic
 - [ ] Create `src/stores/topicStore.ts`
   - [ ] `fetchTopic(slug, token)` with cache check
   - [ ] `getCardsByTopic(slug)`
   - [ ] `getAllCachedCards()`
-- [ ] Run `npm run test:bdd` → GREEN
+- [x] Run `npm run test:bdd` → GREEN (9 scenarios, 48 steps)
 - [ ] Run `npm run test` → GREEN
 
 ### 2.4 Refactor

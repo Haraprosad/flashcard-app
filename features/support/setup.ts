@@ -3,6 +3,13 @@ import { GlobalWindow } from 'happy-dom'
 import React from 'react'
 import { useAuthStore } from '../../src/stores/authStore'
 
+// Suppress act() warnings from @react-oauth/google internals in test env
+const origError = console.error
+console.error = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return
+  origError.apply(console, args)
+}
+
 // Expose React globally so source files using JSX don't need explicit imports
 (global as Record<string, unknown>)['React'] = React
 
