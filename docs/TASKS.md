@@ -32,7 +32,7 @@
   - [x] `npx @21st-dev/cli@latest install claude --api-key YOUR_KEY`
   - [x] `git clone https://github.com/Community-Access/accessibility-agents`
 - [x] Create `CLAUDE.md` in project root (copy from `docs/CLAUDE.md`)
-- [ ] Run `/impeccable teach` and commit `.impeccable.md`
+- [x] Run `/impeccable teach` and commit `PRODUCT.md` + `DESIGN.md` + `.impeccable/design.json`
 
 ### 0.2 Project Structure
 - [x] Create folder structure per spec section 12

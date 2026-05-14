@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import type { ReactNode, ErrorInfo } from 'react'
+import type { ReactNode } from 'react'
 import { useAuthStore } from '../stores/authStore'
 
 interface Props {
@@ -17,7 +17,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
     return { hasError: true }
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
+  componentDidCatch(error: Error) {
     const msg = error.message.toLowerCase()
     if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('token')) {
       useAuthStore.getState().signOut()
