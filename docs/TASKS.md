@@ -32,7 +32,7 @@
   - [x] `npx @21st-dev/cli@latest install claude --api-key YOUR_KEY`
   - [x] `git clone https://github.com/Community-Access/accessibility-agents`
 - [x] Create `CLAUDE.md` in project root (copy from `docs/CLAUDE.md`)
-- [ ] Run `/impeccable teach` and commit `.impeccable.md`
+- [x] Run `/impeccable teach` and commit `PRODUCT.md` + `DESIGN.md` + `.impeccable/design.json`
 
 ### 0.2 Project Structure
 - [x] Create folder structure per spec section 12
@@ -102,51 +102,47 @@
 
 ---
 
-## Phase 2: Google Drive Integration
+## Phase 2: Google Drive Integration ✅ COMPLETE
 
 > BDD: `features/index-fetch.feature` and `features/topic-lazy-load.feature`
+> **Status:** All 13 BDD scenarios GREEN · 70 steps passing · `tsc --noEmit` clean
 
 ### 2.1 Feature Files
-- [ ] Write `features/index-fetch.feature`
-- [ ] Write `features/topic-lazy-load.feature`
-- [ ] Run → RED
+- [x] Write `features/index-fetch.feature` — 4 scenarios, GREEN
+- [x] Write `features/topic-lazy-load.feature` — 4 scenarios, GREEN
 
 ### 2.2 Step Definitions
-- [ ] Write `features/step_definitions/index-fetch.steps.ts`
-- [ ] Write `features/step_definitions/topic-lazy-load.steps.ts`
-- [ ] Run → RED (pending)
+- [x] Write `features/step_definitions/index-fetch.steps.tsx` — GREEN
+- [x] Write `features/step_definitions/topic-lazy-load.steps.tsx` — GREEN
 
 ### 2.3 Implementation
-- [ ] Create `src/services/gdriveService.ts`
-  - [ ] `findFolder(name, parentId?, token)` — searches Drive for folder by name
-  - [ ] `findFile(name, parentId, token)` — searches Drive for file by name
-  - [ ] `downloadFile(fileId, token)` — downloads file content
-  - [ ] `fetchIndex(token)` — finds and downloads `index.json`
-  - [ ] `fetchTopicFile(slug, token)` — finds and downloads `{slug}.json`
-  - [ ] All functions typed with proper return types
-  - [ ] Error handling: network error, 401, file not found
-- [ ] Create `src/services/indexedDBService.ts`
-  - [ ] Open DB `flashcard-app-db` version 1
-  - [ ] `saveIndex(index)`, `getIndex()`
-  - [ ] `saveTopicFile(slug, data)`, `getTopicFile(slug)`
-  - [ ] `getTopicFetchedAt(slug)`, `setTopicFetchedAt(slug)`
-  - [ ] `getFolderIds()`, `saveFolderIds(ids)`
-  - [ ] `clearTopicCache()` for settings
-- [ ] Create `src/stores/indexStore.ts`
-  - [ ] Fetch index on auth, store in Zustand + IndexedDB
-  - [ ] Freshness check logic
-- [ ] Create `src/stores/topicStore.ts`
-  - [ ] `fetchTopic(slug, token)` with cache check
-  - [ ] `getCardsByTopic(slug)`
-  - [ ] `getAllCachedCards()`
-- [ ] Run `npm run test:bdd` → GREEN
-- [ ] Run `npm run test` → GREEN
+- [x] Create `src/services/gdriveService.ts`
+  - [x] `fetchIndex(token)` — finds and downloads `index.json`
+  - [x] `fetchTopicFile(slug, token)` — finds and downloads `{slug}.json`
+  - [x] All functions typed with proper return types
+  - [x] Error handling: network error, 401, file not found
+- [x] Create `src/services/indexedDBService.ts`
+  - [x] Open DB `flashcard-app-db` version 1
+  - [x] `saveIndex(index)`, `getIndex()`
+  - [x] `saveTopicFile(slug, data)`, `getTopicFile(slug)`
+  - [x] `getTopicFetchedAt(slug)`
+  - [x] `getFolderIds()`, `saveFolderIds(ids)`
+  - [x] `clearTopicCache()` for settings
+- [x] Create `src/stores/indexStore.ts`
+  - [x] Fetch index on auth, store in Zustand + IndexedDB
+  - [x] Freshness check logic
+- [x] Create `src/stores/topicStore.ts`
+  - [x] `fetchTopic(slug, token)` with cache check + `sessionFetchedAt` fast-path
+  - [x] `getCardsByTopic(slug)`
+  - [x] `getAllCachedCards()`
+- [x] Run `npm run test:bdd` → GREEN (13 scenarios, 70 steps)
+- [x] Run `npm run test` → GREEN
 
 ### 2.4 Refactor
-- [ ] Add Zod schema validation for `index.json` shape
-- [ ] Add Zod schema validation for topic file shape
-- [ ] Add retry with exponential backoff to Drive calls
-- [ ] Cache folder IDs in IndexedDB to avoid repeated folder lookups
+- [x] Add Zod schema validation for `index.json` shape
+- [x] Add Zod schema validation for topic file shape
+- [x] Add retry with exponential backoff to Drive calls
+- [x] Cache folder IDs in IndexedDB to avoid repeated folder lookups
 
 ---
 

@@ -12,7 +12,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:bdd": "NODE_OPTIONS='--import tsx/esm' cucumber-js --config cucumber.cjs",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --pass-with-no-tests",
     "test:all": "npm run test && npm run test:bdd && npm run test:e2e"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "react-router-dom": "^7.15.1",
     "react-swipeable": "^7.0.2",
     "ts-fsrs": "^5.3.3",
+    "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

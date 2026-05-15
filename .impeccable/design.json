@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-15T00:00:00Z",
+  "title": "Design System: Obsidian Flashcard App",
+  "extensions": {
+    "colorMeta": {
+      "amber-accent": {
+        "role": "primary",
+        "displayName": "Warm Amber",
+        "canonical": "#F59E0B",
+        "tonalRamp": ["#1a0f00", "#3d2a0a", "#5a3d0f", "#785214", "#96701a", "#b88a22", "#d9a533", "#f5b84d"]
+      },
+      "amber-muted": {
+        "role": "secondary",
+        "displayName": "Dim Amber",
+        "canonical": "#78400A",
+        "tonalRamp": ["#1a0e02", "#2d1a05", "#402509", "#53310d", "#664012", "#78400A", "#9a5c1a", "#bd7a2d"]
+      },
+      "base-black": {
+        "role": "neutral",
+        "displayName": "Base Black",
+        "canonical": "#0E0E10",
+        "tonalRamp": ["#0E0E10", "#141416", "#1a1a1c", "#222224", "#2a2a2c", "#363638", "#484849", "#5e5e5f"]
+      },
+      "surface-zinc": {
+        "role": "neutral",
+        "displayName": "Surface Zinc",
+        "canonical": "#18181B",
+        "tonalRamp": ["#18181B", "#1e1e21", "#242427", "#2c2c2f", "#363639", "#424245", "#525255", "#68686b"]
+      },
+      "elevated-graphite": {
+        "role": "neutral",
+        "displayName": "Elevated Graphite",
+        "canonical": "#222227",
+        "tonalRamp": ["#222227", "#28282d", "#2f2f34", "#38383d", "#444449", "#54545a", "#68686d", "#828287"]
+      },
+      "border-dim": {
+        "role": "neutral",
+        "displayName": "Dim Border",
+        "canonical": "#2E2E35",
+        "tonalRamp": ["#2E2E35", "#34343b", "#3b3b42", "#44444b", "#505057", "#616168", "#78787f", "#95959c"]
+      },
+      "rating-again": {
+        "role": "semantic",
+        "displayName": "Again Red",
+        "canonical": "#EF4444",
+        "tonalRamp": ["#1a0505", "#3d0f0f", "#5a1616", "#781e1e", "#962828", "#b53535", "#d44a4a", "#ef6666"]
+      },
+      "rating-hard": {
+        "role": "semantic",
+        "displayName": "Hard Orange",
+        "canonical": "#F97316",
+        "tonalRamp": ["#1a0e02", "#3d1f08", "#5a2f0e", "#784014", "#965520", "#b56d2e", "#d48840", "#f9a35c"]
+      },
+      "rating-good": {
+        "role": "semantic",
+        "displayName": "Good Green",
+        "canonical": "#22C55E",
+        "tonalRamp": ["#031a0a", "#083d17", "#0e5a24", "#147832", "#1c9642", "#28b554", "#3dd46e", "#5ce88a"]
+      },
+      "rating-easy": {
+        "role": "semantic",
+        "displayName": "Easy Blue",
+        "canonical": "#3B82F6",
+        "tonalRamp": ["#05102a", "#0a1f4d", "#0f2f70", "#164093", "#1e55b5", "#2870d4", "#3b82f6", "#5e9aff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles and session complete heading. Maximum one per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings and topic labels." },
+      "title": { "displayName": "Title", "purpose": "Card headers and list item titles." },
+      "body": { "displayName": "Body", "purpose": "Flashcard content and descriptions. Capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Badges, metadata, category tags. Always uppercase." },
+      "mono": { "displayName": "Mono", "purpose": "Code snippets in cards and technical metadata." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "spring-standard", "value": "type: spring, stiffness: 400, damping: 30", "purpose": "Interactive feedback: button press, card entry, rating bar." },
+      { "name": "spring-smooth", "value": "type: spring, stiffness: 200, damping: 25", "purpose": "Page transitions and larger movement." },
+      { "name": "ease-flip", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Card flip 3D Y-axis rotation. Duration 0.4s." },
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "General state transitions. Max duration 500ms." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "btn-primary",
+      "description": "The single most important action per screen. Amber on dark.",
+      "html": "<button class=\"ds-btn-primary\">Start Review</button>",
+      "css": ".ds-btn-primary { background: #F59E0B; color: #0E0E10; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; border: none; border-radius: 8px; padding: 12px 24px; min-height: 44px; cursor: pointer; transition: background 0.2s ease, transform 0.15s ease; } .ds-btn-primary:hover { background: #d48a09; } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "btn-ghost",
+      "description": "Secondary actions and navigation. Transparent, text only.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #A1A1AA; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; border: 0.5px solid #2E2E35; border-radius: 8px; padding: 12px 24px; min-height: 44px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease; } .ds-btn-ghost:hover { color: #F4F4F5; border-color: #52525B; } .ds-btn-ghost:focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; }"
+    },
+    {
+      "name": "Flashcard Surface",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "The primary card container for flashcard content. Flippable.",
+      "html": "<div class=\"ds-card\">\n  <div class=\"ds-card-front\">\n    <span class=\"ds-card-topic\">Kubernetes</span>\n    <p class=\"ds-card-text\">What is the role of the kube-apiserver?</p>\n  </div>\n</div>",
+      "css": ".ds-card { background: #18181B; border: 0.5px solid #2E2E35; border-radius: 12px; padding: 24px; min-height: 200px; display: flex; flex-direction: column; justify-content: center; } .ds-card-topic { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #52525B; margin-bottom: 12px; } .ds-card-text { font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 400; line-height: 1.6; color: #F4F4F5; max-width: 65ch; }"
+    },
+    {
+      "name": "Rating Button - Good",
+      "kind": "button",
+      "refersTo": "rating-good",
+      "description": "Good rating button in the rating bar. Green.",
+      "html": "<button class=\"ds-rating ds-rating-good\">Good</button>",
+      "css": ".ds-rating { font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 8px; padding: 12px 20px; min-height: 44px; min-width: 72px; cursor: pointer; transition: transform 0.15s ease; color: #F4F4F5; } .ds-rating:active { transform: scale(0.95); } .ds-rating:focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; } .ds-rating-good { background: #22C55E; }"
+    },
+    {
+      "name": "Topic Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Topic browser tile showing topic name, card count, and due count.",
+      "html": "<div class=\"ds-topic-card\">\n  <h3 class=\"ds-topic-name\">Kubernetes</h3>\n  <div class=\"ds-topic-stats\">\n    <span class=\"ds-topic-stat\">42 cards</span>\n    <span class=\"ds-topic-stat ds-topic-due\">12 due</span>\n  </div>\n  <div class=\"ds-topic-mastery\">\n    <div class=\"ds-topic-mastery-bar\" style=\"width: 64%\"></div>\n  </div>\n</div>",
+      "css": ".ds-topic-card { background: #18181B; border: 0.5px solid #2E2E35; border-radius: 12px; padding: 16px; cursor: pointer; transition: border-color 0.2s ease; } .ds-topic-card:hover { border-color: #52525B; } .ds-topic-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.125rem; font-weight: 400; line-height: 1.3; color: #F4F4F5; margin: 0 0 8px 0; } .ds-topic-stats { display: flex; gap: 12px; margin-bottom: 12px; } .ds-topic-stat { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: #52525B; } .ds-topic-due { color: #F59E0B; } .ds-topic-mastery { height: 3px; background: #222227; border-radius: 2px; overflow: hidden; } .ds-topic-mastery-bar { height: 100%; background: #22C55E; border-radius: 2px; transition: width 0.5s ease; }"
+    },
+    {
+      "name": "Bottom Sheet",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Modal bottom sheet with rounded top corners. Used for confirmations and settings.",
+      "html": "<div class=\"ds-sheet-overlay\">\n  <div class=\"ds-sheet\">\n    <div class=\"ds-sheet-handle\"></div>\n    <h3 class=\"ds-sheet-title\">Confirm Reset</h3>\n    <p class=\"ds-sheet-body\">This will clear all review progress.</p>\n    <button class=\"ds-btn-primary\">Reset</button>\n  </div>\n</div>",
+      "css": ".ds-sheet-overlay { position: fixed; inset: 0; background: rgba(14,14,16,0.8); display: flex; align-items: flex-end; justify-content: center; } .ds-sheet { background: #18181B; border: 0.5px solid #2E2E35; border-bottom: none; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 480px; } .ds-sheet-handle { width: 36px; height: 4px; background: #2E2E35; border-radius: 2px; margin: 0 auto 16px; } .ds-sheet-title { font-family: 'DM Sans', sans-serif; font-size: 1.125rem; font-weight: 500; color: #F4F4F5; margin: 0 0 8px 0; } .ds-sheet-body { font-family: 'DM Sans', sans-serif; font-size: 1rem; color: #A1A1AA; margin: 0 0 24px 0; line-height: 1.6; }"
+    },
+    {
+      "name": "Badge / Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Small label for topic tags and status indicators.",
+      "html": "<span class=\"ds-badge\">New</span>",
+      "css": ".ds-badge { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #A1A1AA; background: #222227; border-radius: 6px; padding: 4px 8px; display: inline-block; line-height: 1; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Topic search field. Ghost-styled input with focus ring.",
+      "html": "<input class=\"ds-input-search\" type=\"search\" placeholder=\"Search topics...\" aria-label=\"Search topics\">",
+      "css": ".ds-input-search { background: #18181B; border: 0.5px solid #2E2E35; border-radius: 8px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 1rem; color: #F4F4F5; width: 100%; min-height: 44px; transition: border-color 0.2s ease; } .ds-input-search::placeholder { color: #52525B; } .ds-input-search:focus { outline: none; border-color: #F59E0B; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Midnight Desk Lamp",
+    "overview": "A pool of warm amber light on a dark desk. Everything outside the light recedes; the card in front of you is all that matters. The interface is the desk lamp: it illuminates the content and gets out of the way.\n\nThe system is restrained by conviction. Amber (#F59E0B) is the only saturated color, and it earns its place on primary actions and active states. Everything else is tinted neutral: zinc surfaces, graphite borders, dim text.\n\nTypography carries the personality. DM Serif Display gives headings warmth and gravitas without shouting. DM Sans is the workhorse, clean at body size and legible at label size.",
+    "keyCharacteristics": [
+      "Dark base (#0E0E10) with warm amber accent; no other saturated colors at rest",
+      "Tonal layering for depth (base → surface → elevated), no drop shadows",
+      "0.5px borders for separation, never heavy outlines",
+      "Spring-based motion: physical, not decorative; max 500ms",
+      "Mobile-first, one-thumb operation: 44px minimum touch targets"
+    ],
+    "rules": [
+      { "name": "The One Light Rule", "body": "Amber is the only warm, saturated color on any screen at rest. The four semantic rating colors appear only during active rating interaction and disappear immediately after.", "section": "colors" },
+      { "name": "The Tinted Neutral Rule", "body": "All neutrals carry a faint warm tint. Pure gray (#808080) is prohibited.", "section": "colors" },
+      { "name": "The Serif-Once Rule", "body": "DM Serif Display appears on at most one element per screen. Overuse collapses the hierarchy.", "section": "typography" },
+      { "name": "The 65ch Rule", "body": "Body text line length never exceeds 75 characters. Long lines destroy comprehension on mobile.", "section": "typography" },
+      { "name": "The Flat Surface Rule", "body": "Surfaces are flat at rest. Elevation is expressed through tonal value, not through shadow or blur.", "section": "elevation" }
+    ],
+    "dos": [
+      "Use amber (#F59E0B) as the sole accent color for all interactive highlights, focus rings, and primary buttons.",
+      "Express elevation through tonal layering (base → surface → elevated), never through drop shadows.",
+      "Use DM Serif Display for display headings, maximum once per screen.",
+      "Cap body text at 75 characters per line for comfortable reading on mobile.",
+      "Use spring animations (stiffness: 400, damping: 30) for interactive feedback.",
+      "Wrap all animations in @media (prefers-reduced-motion: no-preference).",
+      "Maintain 44px minimum touch targets for all interactive elements.",
+      "Use 0.5px borders for subtle separation between surfaces."
+    ],
+    "donts": [
+      "Don't use glassmorphism, frosted glass effects, or decorative blur overlays.",
+      "Don't use neon accents, glowing text, or bright borders.",
+      "Don't use heavy drop shadows for elevation.",
+      "Don't use default Tailwind gray scales. All neutrals are custom-tinted zinc values.",
+      "Don't use Inter, Roboto, Arial, or Space Grotesk.",
+      "Don't create cluttered dashboard layouts or widget overload.",
+      "Don't build hover-only interactions. Mobile-first means touch is primary.",
+      "Don't use color as the sole indicator of state.",
+      "Don't animate CSS layout properties. Use transform and opacity only.",
+      "Don't use bounce or elastic easing curves."
+    ]
+  }
+}

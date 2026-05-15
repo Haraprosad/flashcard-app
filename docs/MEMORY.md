@@ -1,5 +1,5 @@
 # MEMORY.md — Project State
-> Kept under 60 lines intentionally. Update at the end of every session.
+> Kept under 80 lines intentionally. Update at the end of every session.
 > Ask Claude: "Update MEMORY.md based on what we just built."
 
 ---
@@ -14,13 +14,13 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 
 ## Phase
 
-**Current:** 2 — Google Drive Integration
+**Current:** 3 — Topic Browser UI
 
-**Focus:** Write `features/index-fetch.feature` + `features/topic-lazy-load.feature` → RED → implement gdriveService + indexedDBService → GREEN
+**Focus:** Write `features/topic-browser.feature` → RED → implement SearchBar, MasteryBar, TopicCard, SyncStatusBar, TopicBrowserPage → GREEN
 
 **Updated:** 2026-05-15
 
-**Last session:** Phase 1 complete. Auth BDD 5 scenarios/26 steps GREEN. Unit tests GREEN. TypeScript compiles clean.
+**Last session:** Phase 2 complete. 13 BDD scenarios / 70 steps GREEN. `tsc --noEmit` clean. All Phase 2.4 refactors done.
 
 ---
 
@@ -29,6 +29,7 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 - [x] All planning docs written (PROJECT.md, TASKS.md, BDD-WORKFLOW.md, CLAUDE.md, MEMORY.md)
 - [x] Phase 0: Vite app created, all deps installed, folder structure, types, configs, env, git init
 - [x] Phase 1: Auth feature file, step defs, authStore, useAuth, GoogleSignInButton, LoginPage, router with protected routes, authService, AuthErrorBoundary. BDD 5/5 GREEN.
+- [x] Phase 2: Google Drive Integration — index-fetch + topic-lazy-load BDD GREEN (13 scenarios, 70 steps). gdriveService (Zod + retry + folder ID cache), indexedDBService, indexStore, topicStore (sessionFetchedAt fast-path, getCardsByTopic, getAllCachedCards).
 
 ## In Progress
 
@@ -36,9 +37,9 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 
 ## Next 3
 
-1. Write `features/index-fetch.feature` and `features/topic-lazy-load.feature`
-2. Run `npm run test:bdd` → confirm RED (undefined steps)
-3. Implement `src/services/gdriveService.ts` + `src/services/indexedDBService.ts`
+1. Write `features/topic-browser.feature`
+2. Write step definitions → confirm RED
+3. Implement `SearchBar`, `MasteryBar`, `TopicCard`, `SyncStatusBar`, `TopicBrowserPage`
 
 ---
 
@@ -57,6 +58,9 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 | Test env | Use `happy-dom` (not jsdom) — jsdom 29 has ESM dependency conflicts on Node 20 |
 | BDD loader | Use `tsx/esm` via `NODE_OPTIONS='--import tsx/esm'` + `import` directive in cucumber config |
 | Step defs JSX | Use `.tsx` extension for step definitions containing JSX |
+| Test isolation | Call `cleanup()` from `@testing-library/react` in `After` hook **before** resetting Zustand stores — prevents stale mounted components from firing async effects into the next scenario's state |
+| sessionFetchedAt | `topicStore` tracks in-memory fetch timestamps; fast-path skips IDB+Drive when `sessionTs >= meta.generated_at` |
+| Folder ID cache | `gdriveService` caches Drive folder IDs in IDB via `getFolderIds/saveFolderIds` — mock both in every BDD `Before` hook |
 
 ---
 

@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { LoginPage } from './pages/LoginPage'
+import { TopicBrowserPage } from './pages/TopicBrowserPage'
+import { TopicDetailPage } from './pages/TopicDetailPage'
 import { useAuth } from './hooks/useAuth'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -14,11 +16,6 @@ function RootRedirect() {
   return <Navigate to={isAuthenticated ? '/topics' : '/login'} replace />
 }
 
-// Placeholder — replaced in Phase 3
-function TopicBrowserPlaceholder() {
-  return <div data-testid="topic-browser" />
-}
-
 export function AppRoutes() {
   return (
     <Routes>
@@ -27,7 +24,15 @@ export function AppRoutes() {
         path="/topics"
         element={
           <ProtectedRoute>
-            <TopicBrowserPlaceholder />
+            <TopicBrowserPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/topics/:slug"
+        element={
+          <ProtectedRoute>
+            <TopicDetailPage />
           </ProtectedRoute>
         }
       />
