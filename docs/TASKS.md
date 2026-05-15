@@ -102,17 +102,18 @@
 
 ---
 
-## Phase 2: Google Drive Integration
+## Phase 2: Google Drive Integration ✅ COMPLETE
 
 > BDD: `features/index-fetch.feature` and `features/topic-lazy-load.feature`
+> **Status:** All 13 BDD scenarios GREEN · 70 steps passing · `tsc --noEmit` clean
 
 ### 2.1 Feature Files
 - [x] Write `features/index-fetch.feature` — 4 scenarios, GREEN
-- [ ] Write `features/topic-lazy-load.feature`
+- [x] Write `features/topic-lazy-load.feature` — 4 scenarios, GREEN
 
 ### 2.2 Step Definitions
 - [x] Write `features/step_definitions/index-fetch.steps.tsx` — GREEN
-- [ ] Write `features/step_definitions/topic-lazy-load.steps.ts`
+- [x] Write `features/step_definitions/topic-lazy-load.steps.tsx` — GREEN
 
 ### 2.3 Implementation
 - [x] Create `src/services/gdriveService.ts`
@@ -130,18 +131,18 @@
 - [x] Create `src/stores/indexStore.ts`
   - [x] Fetch index on auth, store in Zustand + IndexedDB
   - [x] Freshness check logic
-- [ ] Create `src/stores/topicStore.ts`
-  - [ ] `fetchTopic(slug, token)` with cache check
-  - [ ] `getCardsByTopic(slug)`
-  - [ ] `getAllCachedCards()`
-- [x] Run `npm run test:bdd` → GREEN (9 scenarios, 48 steps)
-- [ ] Run `npm run test` → GREEN
+- [x] Create `src/stores/topicStore.ts`
+  - [x] `fetchTopic(slug, token)` with cache check + `sessionFetchedAt` fast-path
+  - [x] `getCardsByTopic(slug)`
+  - [x] `getAllCachedCards()`
+- [x] Run `npm run test:bdd` → GREEN (13 scenarios, 70 steps)
+- [x] Run `npm run test` → GREEN
 
 ### 2.4 Refactor
-- [ ] Add Zod schema validation for `index.json` shape
-- [ ] Add Zod schema validation for topic file shape
-- [ ] Add retry with exponential backoff to Drive calls
-- [ ] Cache folder IDs in IndexedDB to avoid repeated folder lookups
+- [x] Add Zod schema validation for `index.json` shape
+- [x] Add Zod schema validation for topic file shape
+- [x] Add retry with exponential backoff to Drive calls
+- [x] Cache folder IDs in IndexedDB to avoid repeated folder lookups
 
 ---
 

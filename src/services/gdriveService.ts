@@ -1,9 +1,69 @@
+import { z } from 'zod'
 import type { FlashcardsIndex, TopicFile } from '../types'
+import { indexedDBService } from './indexedDBService'
+
+// ─── Zod Schemas ───────────────────────────────────────────────────────────
+
+const TopicMetaSchema = z.object({
+  slug: z.string().min(1),
+  title: z.string().min(1),
+  card_count: z.number().int().nonnegative(),
+  source_files: z.array(z.string()),
+  generated_at: z.string(),
+})
+
+const FlashcardsIndexSchema = z.object({
+  version: z.string(),
+  generated_at: z.string(),
+  topics: z.array(TopicMetaSchema),
+})
+
+const FlashCardSchema = z.object({
+  id: z.string().min(1),
+  front: z.string(),
+  back: z.string(),
+  topic: z.string(),
+  tags: z.array(z.string()),
+  source_file: z.string(),
+  created_at: z.string(),
+})
+
+const TopicFileSchema = z.object({
+  version: z.string(),
+  slug: z.string().min(1),
+  title: z.string().min(1),
+  generated_at: z.string(),
+  cards: z.array(FlashCardSchema),
+})
+
+// ─── Drive API helpers ─────────────────────────────────────────────────────
 
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3'
 
 interface DriveFileList {
   files: Array<{ id: string; name: string }>
+}
+
+/** Exponential backoff retry wrapper */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  baseDelayMs = 300,
+): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      // Don't retry auth errors
+      if (err instanceof Error && err.message === 'Unauthorized') throw err
+      if (attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** attempt))
+      }
+    }
+  }
+  throw lastError
 }
 
 async function driveRequest(url: string, token: string): Promise<Response> {
@@ -40,30 +100,54 @@ async function downloadFileJson<T>(fileId: string, token: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
+/**
+ * Resolve the flashcards folder ID, using IndexedDB cache to avoid
+ * repeated folder lookup API calls.
+ */
+async function getFlashcardsFolderId(token: string): Promise<string> {
+  const cached = await indexedDBService.getFolderIds()
+  if (cached['flashcards']) return cached['flashcards']
+
+  const parentFolderId = await findFolderId('ObsidianSecondBrain', null, token)
+  if (!parentFolderId) throw new Error('Parent folder not found')
+
+  const folderId = await findFolderId('flashcards', parentFolderId, token)
+  if (!folderId) throw new Error('Flashcards folder not found')
+
+  await indexedDBService.saveFolderIds({ ...cached, flashcards: folderId })
+  return folderId
+}
+
+// ─── Public API ────────────────────────────────────────────────────────────
+
 export const gdriveService = {
   async fetchIndex(token: string): Promise<FlashcardsIndex> {
-    const parentFolderId = await findFolderId('ObsidianSecondBrain', null, token)
-    if (!parentFolderId) throw new Error('Parent folder not found')
+    return withRetry(async () => {
+      const folderId = await getFlashcardsFolderId(token)
+      const fileId = await findFileId('index.json', folderId, token)
+      if (!fileId) throw new Error('index.json not found')
 
-    const folderId = await findFolderId('flashcards', parentFolderId, token)
-    if (!folderId) throw new Error('Flashcards folder not found')
-
-    const fileId = await findFileId('index.json', folderId, token)
-    if (!fileId) throw new Error('index.json not found')
-
-    return downloadFileJson<FlashcardsIndex>(fileId, token)
+      const raw = await downloadFileJson<unknown>(fileId, token)
+      const parsed = FlashcardsIndexSchema.safeParse(raw)
+      if (!parsed.success) {
+        throw new Error(`index.json schema error: ${parsed.error.message}`)
+      }
+      return parsed.data as FlashcardsIndex
+    })
   },
 
   async fetchTopicFile(slug: string, token: string): Promise<TopicFile> {
-    const parentFolderId = await findFolderId('ObsidianSecondBrain', null, token)
-    if (!parentFolderId) throw new Error('Parent folder not found')
+    return withRetry(async () => {
+      const folderId = await getFlashcardsFolderId(token)
+      const fileId = await findFileId(`${slug}.json`, folderId, token)
+      if (!fileId) throw new Error(`${slug}.json not found`)
 
-    const folderId = await findFolderId('flashcards', parentFolderId, token)
-    if (!folderId) throw new Error('Flashcards folder not found')
-
-    const fileId = await findFileId(`${slug}.json`, folderId, token)
-    if (!fileId) throw new Error(`${slug}.json not found`)
-
-    return downloadFileJson<TopicFile>(fileId, token)
+      const raw = await downloadFileJson<unknown>(fileId, token)
+      const parsed = TopicFileSchema.safeParse(raw)
+      if (!parsed.success) {
+        throw new Error(`${slug}.json schema error: ${parsed.error.message}`)
+      }
+      return parsed.data as TopicFile
+    })
   },
 }

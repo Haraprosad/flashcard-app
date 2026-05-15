@@ -1,5 +1,5 @@
 import React from 'react'
-import { Given, When, Then, After } from '@cucumber/cucumber'
+import { Given, When, Then, After, Before } from '@cucumber/cucumber'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
@@ -12,6 +12,8 @@ import type { FlashcardsIndex, TopicMeta } from '../../src/types'
 const origFetch = globalThis.fetch
 const origGetIndex = indexedDBService.getIndex
 const origSaveIndex = indexedDBService.saveIndex
+const origGetFolderIds = indexedDBService.getFolderIds
+const origSaveFolderIds = indexedDBService.saveFolderIds
 
 function renderApp(path: string) {
   return render(
@@ -44,7 +46,17 @@ After(function () {
   globalThis.fetch = origFetch
   indexedDBService.getIndex = origGetIndex
   indexedDBService.saveIndex = origSaveIndex
+  indexedDBService.getFolderIds = origGetFolderIds
+  indexedDBService.saveFolderIds = origSaveFolderIds
   useIndexStore.setState({ index: null, topics: [], loading: false, error: null, isOffline: false })
+})
+
+// ─── Before ─────────────────────────────────────────────────────────────────
+
+Before(function () {
+  // Prevent folder ID cache from short-circuiting Drive API calls
+  indexedDBService.getFolderIds = async () => ({})
+  indexedDBService.saveFolderIds = async () => {}
 })
 
 // ─── Given ──────────────────────────────────────────────────────────────────

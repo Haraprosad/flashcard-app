@@ -1,16 +1,28 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { useIndexStore } from '../stores/indexStore'
+import { useTopicStore } from '../stores/topicStore'
 
 export function TopicBrowserPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const { index, topics, loading, error, isOffline, fetchIndexFromDrive } = useIndexStore()
+  const fetchTopic = useTopicStore((s) => s.fetchTopic)
+  const syncedIndex = useRef<string | null>(null)
 
   useEffect(() => {
     if (accessToken && !index) {
       fetchIndexFromDrive(accessToken)
     }
   }, [accessToken, fetchIndexFromDrive, index])
+
+  useEffect(() => {
+    if (accessToken && index && syncedIndex.current !== index.generated_at) {
+      syncedIndex.current = index.generated_at
+      for (const t of index.topics) {
+        fetchTopic(t.slug, accessToken)
+      }
+    }
+  }, [accessToken, index, fetchTopic])
 
   if (loading || (!index && !error)) {
     return <div data-testid="loading-state">Loading...</div>
