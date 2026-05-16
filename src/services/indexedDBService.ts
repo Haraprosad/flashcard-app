@@ -79,4 +79,12 @@ export const indexedDBService = {
     const db = await getDB()
     await db.put('meta', { _key: 'folderIds', value: ids })
   },
+
+  async getCachedTopicStats(): Promise<{ topicCount: number; cardCount: number }> {
+    const db = await getDB()
+    const all = await db.getAll('topics')
+    const topicCount = all.length
+    const cardCount = all.reduce((sum, t) => sum + (t.cards?.length ?? 0), 0)
+    return { topicCount, cardCount }
+  },
 }

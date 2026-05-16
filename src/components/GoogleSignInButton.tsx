@@ -43,7 +43,7 @@ export function GoogleSignInButton() {
         signIn(tokenResponse.access_token, '')
       }
     },
-    scope: 'https://www.googleapis.com/auth/drive.readonly email profile',
+    scope: 'https://www.googleapis.com/auth/drive email profile',
   })
 
   return (

@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "test:bdd": "NODE_OPTIONS='--import tsx/esm' cucumber-js --config cucumber.cjs",
     "test:e2e": "playwright test --pass-with-no-tests",
-    "test:all": "npm run test && npm run test:bdd && npm run test:e2e"
+    "test:all": "npm run test && npm run test:bdd && npm run test:e2e",
+    "sync": "tsx sync/index.ts"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
@@ -28,6 +29,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@cucumber/cucumber": "^12.8.3",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
@@ -45,6 +47,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "gray-matter": "^4.0.3",
     "happy-dom": "^20.9.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.60.0",

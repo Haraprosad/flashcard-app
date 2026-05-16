@@ -18,6 +18,23 @@
   --color-hard:     #F97316;
   --color-good:     #22C55E;
   --color-easy:     #3B82F6;
+  --color-on-accent: #0E0E10;
+  --heatmap-1:      #166534;
+  --heatmap-2:      #15803d;
+  --heatmap-3:      #16a34a;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {

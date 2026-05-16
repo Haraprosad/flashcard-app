@@ -24,6 +24,7 @@ export const useIndexStore = create<IndexState>((set) => ({
     try {
       const index = await gdriveService.fetchIndex(token)
       await indexedDBService.saveIndex(index)
+      localStorage.setItem('last_synced_at', new Date().toISOString())
       set({ index, topics: index.topics, loading: false, isOffline: false })
     } catch {
       try {

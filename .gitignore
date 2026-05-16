@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 .agents
 ui-ux-pro-max-skill
+sync/.env
