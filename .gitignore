@@ -25,3 +25,8 @@ dist-ssr
 .agents
 ui-ux-pro-max-skill
 sync/.env
+
+# Test artifacts
+playwright-report/
+test-results/
+reports/
