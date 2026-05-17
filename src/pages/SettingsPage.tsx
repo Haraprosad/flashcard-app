@@ -187,6 +187,14 @@ export function SettingsPage() {
     setTimeout(() => setSuccessMessage(null), 3000)
   }
 
+  function handleUnauthorized(err: unknown): boolean {
+    if (err instanceof Error && err.message === 'Unauthorized') {
+      useAuthStore.getState().signOut()
+      return true
+    }
+    return false
+  }
+
   async function handleVaultSync() {
     if (!accessToken) return
     setVaultSyncLoading(true)
@@ -215,6 +223,7 @@ export function SettingsPage() {
       localStorage.setItem('last_synced_at', new Date().toISOString())
       await loadStats()
     } catch (err) {
+      if (handleUnauthorized(err)) return
       setVaultSyncProgress({
         stage: 'done',
         message: `Error: ${err instanceof Error ? err.message : String(err)}`,
@@ -267,7 +276,8 @@ export function SettingsPage() {
       const synced = await indexedDBService.getMetaValue<string>('sr_state_synced_at')
       setSrSyncedAt(synced)
       showSuccess('Progress synced to Drive')
-    } catch {
+    } catch (err) {
+      if (handleUnauthorized(err)) return
       showSuccess('Sync failed — check your connection')
     } finally {
       setDriveBackupLoading(false)
@@ -288,7 +298,8 @@ export function SettingsPage() {
       await progressStore.bulkSetData(remote.streak_data, remote.review_log)
       setRestoreDialogOpen(false)
       showSuccess('Progress restored from Drive')
-    } catch {
+    } catch (err) {
+      if (handleUnauthorized(err)) return
       showSuccess('Restore failed — check your connection')
     } finally {
       setDriveBackupLoading(false)
