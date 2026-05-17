@@ -480,25 +480,43 @@
 
 ## Phase 12: Deployment
 
-### 12.1 Google Cloud Console
-- [ ] Create OAuth 2.0 Web Client ID
+> **Remote:** `https://github.com/Haraprosad/flashcard-app.git` (main branch)
+> `netlify.toml` already configured: build=`npm run build`, publish=`dist`, Node 20, SPA redirect.
+
+### 12.1 GitHub Actions CI/CD
+
+- [x] Create `.github/workflows/ci-cd.yml`
+  - [x] **CI job** (every push + PR): type-check → lint → Vitest → Cucumber BDD → Playwright E2E
+  - [x] **Deploy job** (main push only, after CI green): `npm run build` → `netlify deploy --prod`
+  - [x] **Preview job** (PRs only, after CI green): builds and deploys a Netlify draft URL
+  - [x] All `VITE_*` env vars injected from GitHub Secrets at build time
+  - [x] Commit and push `.github/workflows/ci-cd.yml` to GitHub
+
+### 12.2 Google Cloud Console (manual)
+
+- [ ] Create OAuth 2.0 Web Client ID (if not already done for dev)
 - [ ] Add `http://localhost:5173` to authorized origins (dev)
 - [ ] Add Netlify production URL to authorized origins (after deploy)
 - [ ] Add Netlify production URL to authorized redirect URIs
 
-### 12.2 Netlify Setup
-- [ ] Push repo to GitHub
-- [ ] Connect GitHub repo to Netlify (new site from git)
-- [ ] Set build command: `npm run build`
-- [ ] Set publish directory: `dist`
-- [ ] Set environment variables:
-  - [ ] `VITE_GOOGLE_CLIENT_ID`
+### 12.3 Netlify Site Setup (manual — one-time)
+
+- [ ] Go to [app.netlify.com](https://app.netlify.com) → "Add new site" → "Deploy manually" (or import from Git)
+  - Build command: `npm run build` · Publish directory: `dist` (already in `netlify.toml`)
+- [ ] Get **Site ID**: Site Settings → General → Site ID
+- [ ] Get **Auth Token**: User Settings → Applications → Personal access tokens → "New access token"
+- [ ] Add GitHub Secrets to the repo → Settings → Secrets → Actions:
+  - [ ] `NETLIFY_AUTH_TOKEN` — personal access token from above
+  - [ ] `NETLIFY_SITE_ID` — site ID from above
+  - [ ] `VITE_GOOGLE_CLIENT_ID` — your OAuth client ID
   - [ ] `VITE_GDRIVE_FOLDER_NAME` = `ObsidianSecondBrain`
   - [ ] `VITE_GDRIVE_FLASHCARDS_FOLDER` = `flashcards`
-- [ ] Deploy
+  - [ ] `VITE_GDRIVE_SR_STATE_FILE` = `sr_state.json`
+- [ ] Trigger first deploy: push any commit to `main` → GitHub Actions runs CI then deploys
 - [ ] Copy production URL → add to Google Cloud Console
 
-### 12.3 Post-Deploy Verification
+### 12.4 Post-Deploy Verification
+
 - [ ] Open production URL → login page appears
 - [ ] OAuth sign-in completes → topic browser appears
 - [ ] Topic card tap → topic detail loads
