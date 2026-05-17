@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { FlashCard, Rating } from '../types'
 import { fsrsService } from '../services/fsrsService'
 import { srStateService } from '../services/srStateService'
+import { getTierEligibleCards } from '../services/tierService'
 import { progressStore } from './progressStore'
 
 const NEW_CARD_CAP = 20
@@ -36,10 +37,13 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const srState = srStateService.getSRState()
     const now = new Date()
 
+    // Apply tier gating — only include cards whose tier prerequisites are met
+    const eligibleCards = getTierEligibleCards(cards, srState)
+
     const dueCards: FlashCard[] = []
     const newCards: FlashCard[] = []
 
-    for (const card of cards) {
+    for (const card of eligibleCards) {
       const data = srState[card.id]
       if (!data) {
         newCards.push(card)

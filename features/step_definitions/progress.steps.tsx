@@ -180,6 +180,8 @@ Then('that cell is dark green', function () {
 Given('"kubernetes" has {int} cards', function (count: number) {
   const cards: FlashCard[] = Array.from({ length: count }, (_, i) => ({
     id: `kubernetes-source-${i}`,
+    type: 'standard' as const,
+    tier: 1 as const,
     front: `Q${i + 1}`,
     back: `A${i + 1}`,
     topic: 'kubernetes',

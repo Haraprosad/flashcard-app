@@ -509,6 +509,112 @@
 
 ---
 
+## Phase 13: Enhanced Card Types — Intuition, Cloze, Progressive Disclosure
+
+> Upgrades the flashcard system with science-backed card types:
+> 1. **Intuition-first cards** — scenario/analogy before definition (Brilliant.org style)
+> 2. **Cloze deletion** — fill-in-the-blank that forces reconstruction, not recognition
+> 3. **Progressive disclosure** — 3-tier scaffolding (T1=intuition → T2=mechanism → T3=formal)
+> 4. **Tier gating** — app enforces mastery of lower tiers before showing higher ones
+>
+> All changes are backward-compatible: cards without `type`/`tier` default to `standard`/`1`.
+
+### 13.1 Type System Updates
+- [ ] Update `src/types/index.ts`
+  - [ ] Add `CardType = 'standard' | 'cloze' | 'intuition'`
+  - [ ] Add `CardTier = 1 | 2 | 3`
+  - [ ] Add `type` field to `FlashCard` interface (default: `'standard'`)
+  - [ ] Add `tier` field to `FlashCard` interface (default: `1`)
+  - [ ] Add `concept_id` optional field to `FlashCard` (groups tiered cards)
+  - [ ] Update `FlashcardsFile.version` to `"2.0"`
+- [ ] Add Zod schemas for new fields with safe defaults (backward compat)
+- [ ] `tsc --noEmit` clean
+
+### 13.2 Sync Script — Parse New Card Formats
+- [ ] Update sync script to parse `[T1] [intuition]`, `[T2] [standard]`, `[T3] [cloze]` markers
+  - [ ] Extract tier number from `[TN]` prefix
+  - [ ] Extract card type from `[type]` prefix
+  - [ ] Fall back to `[T1] [standard]` if no markers (backward compat)
+- [ ] Expand cloze cards: one `{{c1::text}} {{c2::text}}` line → multiple FlashCard objects
+  - [ ] Card N: blank `{{cN::text}}` segment, reveal all others
+  - [ ] Each expanded card gets `type: 'cloze'` and a unique ID with `-cN` suffix
+- [ ] Extract `concept_id` from context (e.g., section heading or `[concept:slug]` marker)
+- [ ] Write updated `flashcards.json` with version `"2.0"` and new fields
+- [ ] Test: old-format notes without markers still produce valid cards
+
+### 13.3 Cloze Card Rendering
+- [ ] Create `src/components/ClozeCard.tsx`
+  - [ ] Parse `{{cN::text}}` markers from `front` field
+  - [ ] Render blanks as `___` with underline styling
+  - [ ] Back side: full text with revealed segment highlighted (amber accent)
+  - [ ] Optional: tap blank to reveal individual segment before full flip
+  - [ ] Framer Motion fade-in for revealed text
+  - [ ] `/accessibility-review`
+- [ ] Cloze parser utility in `src/services/clozeService.ts`
+  - [ ] `parseClozeTemplate(front: string)` → returns segments array
+  - [ ] `renderBlanked(front: string, clozeIndex: number)` → string with blanks
+  - [ ] `renderRevealed(back: string, clozeIndex: number)` → string with highlight
+  - [ ] Unit tests for all edge cases (multiple clozes, nested brackets, escaped braces)
+
+### 13.4 Intuition Card Styling
+- [ ] Create `src/components/IntuitionCardFront.tsx`
+  - [ ] Scenario text rendered in italic DM Sans
+  - [ ] "Imagine:" prefix in amber accent, bold
+  - [ ] Subtle gradient background to differentiate from standard cards
+  - [ ] Tier badge: small "T1" / "T2" / "T3" indicator in corner (muted, not distracting)
+  - [ ] `/accessibility-review`
+
+### 13.5 FlashCard Component Update — Dispatch by Type
+- [ ] Update `src/components/FlashCard.tsx`
+  - [ ] Accept `type` prop from card data
+  - [ ] Render `ClozeCard` when `type === 'cloze'`
+  - [ ] Render `IntuitionCardFront` when `type === 'intuition'`
+  - [ ] Render existing layout when `type === 'standard'` (no change)
+  - [ ] All types share the same flip interaction and swipe behavior
+- [ ] Update `SwipeCardStack` to pass card type through
+- [ ] Update `ReviewSessionPage` to pass card data to components
+
+### 13.6 Progressive Disclosure — Tier Gating Logic
+- [ ] Create `src/services/tierService.ts`
+  - [ ] `getTierEligibleCards(cards: FlashCard[], srState: SRState): FlashCard[]`
+    - [ ] Cards without `concept_id` → always eligible
+    - [ ] Group cards by `concept_id`
+    - [ ] T1 cards → always eligible
+    - [ ] T2 cards → eligible only if T1 card in same group has `reps >= 1` and was rated ≥ "Good"
+    - [ ] T3 cards → eligible only if T2 card in same group has `reps >= 1` and was rated ≥ "Good"
+  - [ ] `getConceptProgress(conceptId: string, srState: SRState): { t1Done, t2Done, t3Done }`
+- [ ] Update `reviewStore.loadSession` to call `getTierEligibleCards` before session build
+- [ ] Show tier progress in `TopicDetailPage` (e.g., "3/5 concepts at T1, 2/5 at T2, 0/5 at T3")
+- [ ] Unit tests for tier gating logic (all combinations: no concept_id, partial progress, full progress)
+
+### 13.7 BDD Tests ✅ COMPLETE
+- [x] Write `features/enhanced-cards.feature`
+  - [x] Scenario: standard card renders as before
+  - [x] Scenario: cloze card shows blanks on front, highlighted text on back
+  - [x] Scenario: intuition card shows scenario with "Imagine:" prefix
+  - [x] Scenario: card without type/tier defaults to standard/tier1
+  - [x] Scenario: flipping cloze card shows highlighted text on back
+  - [x] Scenario: tier badge color varies by tier
+  - [x] Scenario: intuition card back shows normal explanation
+- [x] Write `features/progressive-disclosure.feature`
+  - [x] Scenario: T2 card not shown until T1 rated Good
+  - [x] Scenario: T3 card not shown until T2 rated Good
+  - [x] Scenario: card without concept_id always shown
+  - [x] Scenario: rating T1 as Again keeps T2 hidden
+  - [x] Scenario: all tiers shown after sequential Good ratings
+  - [x] Scenario: T1 card always eligible regardless of state
+- [x] Write step definitions for both feature files
+- [x] `npm run test:bdd` → 65/66 GREEN (1 pre-existing index-fetch failure unrelated to Phase 13)
+
+### 13.8 Visual Polish
+- [ ] Tier badge design: small pill in top-right corner of card (T1=green, T2=amber, T3=blue)
+- [ ] Cloze blank: amber underline, subtle pulse animation on first appearance
+- [ ] Intuition card: gradient from `--bg-surface` to slightly lighter shade
+- [ ] Review session header shows tier breakdown (e.g., "5 T1 · 3 T2 · 2 T3 cards due")
+- [ ] `prefers-reduced-motion` respected for all new animations
+
+---
+
 ## Ongoing
 
 - [ ] Update `TASKS.md` as tasks are completed

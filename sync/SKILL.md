@@ -53,6 +53,28 @@ LEARNING SCIENCE YOU MUST APPLY
    Those are the weakest possible flashcards. Every card must require the reader
    to reconstruct a specific mechanism, number, or causal explanation.
 
+9. INTUITION BEFORE DEFINITION (inspired by Brilliant.org)
+   Start every concept with a vivid scenario or analogy BEFORE giving the formal
+   definition. The brain needs a concrete "hook" to attach abstract information.
+   Never begin a concept with "What is X?" — begin with "Imagine: [scenario]."
+   Each concept's Tier 1 card must be experience-first, not definition-first.
+
+10. PROGRESSIVE DISCLOSURE — SCAFFOLDING (Vygotsky's Zone of Proximal Development)
+    Layer complexity in 3 tiers. Only advance when the previous tier is mastered.
+    Tier 1 = intuition (what does it feel like? vivid scenario, no jargon)
+    Tier 2 = mechanism (how does it work? causal chain, precise explanation)
+    Tier 3 = formal (equations, edge cases, boundary conditions, specific numbers)
+    The app enforces this: Tier 2 cards only appear after Tier 1 is rated "Good"
+    or better. Tier 3 only after Tier 2. This prevents premature abstraction.
+
+11. CLOZE DELETION (Slamecka & Graf, 1978 — generation effect applied to text)
+    Fill-in-the-blank forces reconstruction of the concept, not just recognition.
+    One source sentence can generate multiple cards by blanking different parts.
+    Cloze cards are especially effective for: definitions, numbered lists, causal
+    chains, and any sentence where the relationship between parts matters.
+    Format: use {{c1::hidden text}} syntax — the sync script expands each into
+    its own card.
+
 ────────────────────────────────────────────────────────────────────────────────
 STEP 1 — RESEARCH
 ────────────────────────────────────────────────────────────────────────────────
@@ -186,20 +208,52 @@ These become future note prompts. Make them specific, not vague.]
 
 ## ⚡ Flashcards
 
-[Write 10-15 flashcards. Use the EXACT format below — one blank line between each card.
-Apply the flashcard design rules from your learning science knowledge:
+[Write 12-18 flashcards covering the topic. Every concept gets 3 tiers of cards.
+Use the EXACT format below — one blank line between each card.
+
+CARD TYPES AND FORMAT:
+Each card line starts with [TIER] [TYPE] then the question/prompt, then #flashcard
+on the same line. The answer follows on the next line.
+
+TIER MARKERS: [T1] [T2] [T3]
+- [T1] = Intuition — vivid scenario, analogy, "what does it feel like?" No jargon.
+- [T2] = Mechanism — how it works, causal chain, precise explanation.
+- [T3] = Formal — equations, specific numbers, edge cases, boundary conditions.
+
+TYPE MARKERS: [standard] [cloze] [intuition]
+- [standard] = Q&A format. Front is a question, back is the answer.
+- [cloze] = Fill-in-the-blank. Use {{c1::hidden text}} syntax. One sentence can
+  generate multiple cards by using c1, c2, c3 etc. The sync script expands each
+  cloze number into its own card.
+- [intuition] = Scenario-first. Front paints a vivid picture, back reveals the
+  concept through the scenario. Never starts with a definition.
+
+RULES:
 - NEVER write "What is X?" → "X is Y" definition cards
-- ALWAYS test mechanisms, specific numbers, causal chains, applications, misconceptions
-- Each card must require reconstruction of something specific, not vague recall
-- Mix card types: causal, procedural, application, misconception, specific-fact, comparative]
+- ALWAYS start each concept with a [T1] card (intuition-first, concrete → abstract)
+- Every concept must have at least one [T1], one [T2], and one [T3] card
+- Use [cloze] for definitions, numbered facts, and causal chains
+- Use [intuition] for Tier 1 — scenarios, analogies, "imagine if..." prompts
+- Use [standard] for Tier 2 and Tier 3 — mechanisms, comparisons, specific facts
+- Mix card types freely across tiers
+- Each card must require RECONSTRUCTION, not recognition]
 
-What specific thing do you want to test? #flashcard
-Precise answer — a specific mechanism, number, or causal explanation. 1-3 sentences max.
+[T1] [intuition] Imagine: You drop a glass of water — it shatters and splashes everywhere. You never see broken pieces jump back into a glass. Why not? #flashcard
+There's only 1 "glass" arrangement but millions of "scattered" arrangements. The system naturally moves toward more-possible-arrangements states. This tendency IS entropy — it's not a force, it's statistics.
 
-Next question? #flashcard
-Next answer.
+[T2] [standard] When a gas is compressed adiabatically, what happens to its temperature, and what is the causal chain? #flashcard
+Compressing reduces volume → molecules collide more frequently → average kinetic energy increases → temperature rises. The double-membrane isolates the process so no heat escapes, forcing all work energy into kinetic energy.
 
-[Continue for all 10-15 cards...]
+[T3] [standard] In the adiabatic equation TV^(γ-1) = constant, if volume halves for a monatomic gas (γ = 5/3), by what factor does temperature increase? #flashcard
+T₂/T₁ = (V₁/V₂)^(γ-1) = 2^(2/3) ≈ 1.587. Temperature increases by ~59%. For a diatomic gas (γ = 7/5), the factor would be 2^(2/5) ≈ 1.32.
+
+[T1] [cloze] In any spontaneous process, the total {{entropy}} of an isolated system always {{increases}} — this is the {{Second Law of Thermodynamics}}. #flashcard
+In any spontaneous process, the total entropy of an isolated system always increases — this is the Second Law of Thermodynamics. This is the only physical law that gives direction to time.
+
+[T2] [cloze] Entropy is defined as S = {{k_B · ln(W)}}, where k_B is {{Boltzmann's constant}} and W is the {{number of microstates}}. #flashcard
+Entropy is defined as S = k_B · ln(W), where k_B is Boltzmann's constant (1.38 × 10⁻²³ J/K) and W is the number of microstates corresponding to the macrostate.
+
+[Continue for all 12-18 cards, ensuring every major concept has T1 + T2 + T3 coverage...]
 
 ────────────────────────────────────────────────────────────────────────────────
 STEP 3 — SAVE TO GOOGLE DRIVE

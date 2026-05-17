@@ -23,14 +23,21 @@ export interface TopicFile {
   cards: FlashCard[]
 }
 
+export type CardType = 'standard' | 'cloze' | 'intuition'
+export type CardTier = 1 | 2 | 3
+
 export interface FlashCard {
   id: string             // Stable format: "{slug}-{basename}-{index}"
-  front: string
-  back: string
+  type: CardType         // Card format. Defaults to 'standard' if absent (backward compat)
+  tier: CardTier         // Progressive disclosure level. Defaults to 1 if absent
+  front: string          // Question / scenario / cloze template with {{cN::text}} markers
+  back: string           // Answer / explanation / revealed cloze text
   topic: string
   tags: string[]
   source_file: string    // Original .md filename in vault
   created_at: string     // ISO timestamp
+  concept_id?: string    // Groups tiered cards for the same concept (e.g. "entropy")
+                         // Used for tier gating. If absent, no gating applied.
 }
 
 // Full SR state persisted to localStorage under key "sr_state"

@@ -26,7 +26,7 @@ export const useIndexStore = create<IndexState>((set) => ({
       await indexedDBService.saveIndex(index)
       localStorage.setItem('last_synced_at', new Date().toISOString())
       set({ index, topics: index.topics, loading: false, isOffline: false })
-    } catch {
+    } catch (err) {
       try {
         const cached = await indexedDBService.getIndex()
         if (cached) {
@@ -36,7 +36,8 @@ export const useIndexStore = create<IndexState>((set) => ({
       } catch {
         // cache read failed
       }
-      set({ loading: false, error: 'Failed to fetch index', isOffline: true })
+      const message = err instanceof Error ? err.message : 'Failed to fetch index'
+      set({ loading: false, error: message, isOffline: true })
     }
   },
 }))

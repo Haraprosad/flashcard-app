@@ -7,6 +7,8 @@ import type { FlashCard, CardSRData } from '../../src/types'
 function makeCard(overrides: Partial<FlashCard> = {}): FlashCard {
   return {
     id: 'test-card-0',
+    type: 'standard',
+    tier: 1,
     front: 'What is Kubernetes?',
     back: 'Container orchestration platform',
     topic: 'kubernetes',

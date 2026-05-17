@@ -8,9 +8,27 @@
  *
  * No API key needed — Claude.ai cowork writes the notes with cards embedded.
  *
- * Card format (Obsidian Spaced Repetition plugin):
- *   Question text here? #flashcard
- *   Answer text here.
+ * Card formats supported:
+ *
+ * 1. Standard (legacy):
+ *    Question text here? #flashcard
+ *    Answer text here.
+ *
+ * 2. Tiered + typed (new):
+ *    [T1] [intuition] Imagine: you drop a glass... Why not? #flashcard
+ *    There's only 1 arrangement but millions of scattered ones...
+ *
+ *    [T2] [standard] When a gas is compressed... #flashcard
+ *    Temperature rises because...
+ *
+ *    [T1] [cloze] Entropy is {{c1::S = k_B ln(W)}} where {{c2::W}} is microstates. #flashcard
+ *    Full revealed text.
+ *
+ * Cloze expansion: one line with {{c1::text}} and {{c2::text}} produces
+ * multiple cards, each blanking a different segment.
+ *
+ * Concept grouping: add [concept:slug] on a line before related cards
+ * to group them for progressive disclosure tier gating.
  *
  * Run: npm run sync
  */
@@ -45,6 +63,16 @@ const GENERIC_TAGS = new Set([
 ])
 
 const SR_META_RE = /<!--SR:[^>]+-->/g
+
+// Tier+type marker regex: [T1] [standard], [T2] [cloze], etc.
+const TIER_TYPE_RE = /^\[(T[123])\]\s*\[(standard|cloze|intuition)\]\s*/
+// Concept group marker: [concept:entropy]
+const CONCEPT_RE = /^\[concept:([a-z0-9-]+)\]\s*$/
+// Cloze segment regex: {{c1::hidden text}}
+const CLOZE_RE = /\{\{c(\d+)::([^}]+)\}\}/g
+
+type CardType = 'standard' | 'cloze' | 'intuition'
+type CardTier = 1 | 2 | 3
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -101,11 +129,73 @@ function getTopic(
   return { slug: slugify(clean), title: clean }
 }
 
+/** Parse tier/type markers from the front of a card line */
+function parseCardMeta(line: string): { tier: CardTier; type: CardType; rest: string } {
+  const match = TIER_TYPE_RE.exec(line)
+  if (match) {
+    const tier = parseInt(match[1][1], 10) as CardTier
+    const type = match[2] as CardType
+    const rest = line.slice(match[0].length)
+    return { tier, type, rest }
+  }
+  return { tier: 1, type: 'standard', rest: line }
+}
+
+/** Count distinct cloze indices (c1, c2, etc.) in a template string */
+function getClozeCount(template: string): number {
+  const indices = new Set<number>()
+  let m: RegExpExecArray | null
+  const re = new RegExp(CLOZE_RE.source, 'g')
+  while ((m = re.exec(template)) !== null) {
+    indices.add(parseInt(m[1], 10))
+  }
+  return indices.size
+}
+
+/**
+ * Expand a cloze template into one card per cloze index.
+ * Card N blanks only {{cN::text}}, showing all other cloze segments.
+ * Returns array of { front, back } where front has blanks and back is full text.
+ */
+function expandCloze(
+  template: string,
+  fullAnswer: string,
+): Array<{ front: string; back: string; clozeIndex: number }> {
+  const indices = new Set<number>()
+  let m: RegExpExecArray | null
+  const re = new RegExp(CLOZE_RE.source, 'g')
+  while ((m = re.exec(template)) !== null) {
+    indices.add(parseInt(m[1], 10))
+  }
+
+  if (indices.size === 0) {
+    return [{ front: template, back: fullAnswer, clozeIndex: 0 }]
+  }
+
+  const results: Array<{ front: string; back: string; clozeIndex: number }> = []
+  for (const idx of indices) {
+    const idxRe = new RegExp(`\\{\\{c${idx}::([^}]+)\\}\\}`, 'g')
+    const otherRe = new RegExp(`\\{\\{c(?!${idx}::)[^}]+\\}\\}`, 'g')
+
+    const front = template
+      .replace(idxRe, '___')
+      .replace(otherRe, (_, text) => text)
+
+    const back = template.replace(/\{\{c\d+::([^}]+)\}\}/g, '$1')
+
+    results.push({ front, back: back + '\n\n' + fullAnswer, clozeIndex: idx })
+  }
+  return results
+}
+
 // ─── Card parser ───────────────────────────────────────────────────────────
 
 interface RawCard {
   front: string
   back: string
+  tier: CardTier
+  type: CardType
+  conceptId: string | null
 }
 
 function parseCards(body: string): RawCard[] {
@@ -113,24 +203,55 @@ function parseCards(body: string): RawCard[] {
   const cleaned = body.replace(SR_META_RE, '').trim()
   const lines = cleaned.split('\n')
 
+  let currentConceptId: string | null = null
+
   let i = 0
   while (i < lines.length) {
     const line = lines[i]
 
-    // Format 1: "Question? #flashcard\nAnswer"
+    // Check for concept group marker
+    const conceptMatch = CONCEPT_RE.exec(line.trim())
+    if (conceptMatch) {
+      currentConceptId = conceptMatch[1]
+      i++
+      continue
+    }
+
+    // Format 1: "[T1] [type] Question? #flashcard\nAnswer" or "Question? #flashcard\nAnswer"
     if (/#flashcard\b/.test(line)) {
-      const front = line.replace(/#flashcard\b.*/, '').trim()
+      const raw = line.replace(/#flashcard\b.*/, '').trim()
+      const { tier, type, rest } = parseCardMeta(raw)
+      const front = rest.trim()
+
       const backLines: string[] = []
       i++
       while (i < lines.length) {
         const next = lines[i].trim()
         if (/#flashcard\b/.test(lines[i]) || /^\?$/.test(next)) break
         if (/^#{1,6}\s/.test(next) && backLines.length > 0) break
+        if (CONCEPT_RE.test(next)) break
         backLines.push(lines[i])
         i++
       }
       const back = backLines.join('\n').replace(SR_META_RE, '').trim()
-      if (front && back) cards.push({ front, back })
+
+      if (type === 'cloze' && getClozeCount(front) > 0) {
+        const expanded = expandCloze(front, back)
+        for (const exp of expanded) {
+          cards.push({
+            front: exp.front,
+            back: exp.back,
+            tier,
+            type: 'cloze',
+            conceptId: currentConceptId,
+          })
+        }
+      } else if (front && back) {
+        cards.push({ front, back, tier, type, conceptId: currentConceptId })
+      }
+
+      // Reset concept after each card group if not persistent
+      // Concept stays active across consecutive cards until a new [concept:...] marker
       continue
     }
 
@@ -139,21 +260,40 @@ function parseCards(body: string): RawCard[] {
       const frontLines: string[] = []
       let j = i - 1
       while (j >= 0 && lines[j].trim() !== '' && !/#flashcard\b/.test(lines[j])) {
+        if (CONCEPT_RE.test(lines[j].trim())) break
         frontLines.unshift(lines[j])
         j--
       }
+      const rawFront = frontLines.join('\n').trim()
+      const { tier, type, rest } = parseCardMeta(rawFront)
+      const front = rest.trim()
+
       const backLines: string[] = []
       i++
       while (i < lines.length) {
         const next = lines[i].trim()
         if (next === '' && backLines.length > 0) { i++; break }
         if (/#flashcard\b/.test(lines[i]) || /^\?$/.test(next)) break
+        if (CONCEPT_RE.test(next)) break
         backLines.push(lines[i])
         i++
       }
-      const front = frontLines.join('\n').trim()
       const back = backLines.join('\n').replace(SR_META_RE, '').trim()
-      if (front && back) cards.push({ front, back })
+
+      if (type === 'cloze' && getClozeCount(front) > 0) {
+        const expanded = expandCloze(front, back)
+        for (const exp of expanded) {
+          cards.push({
+            front: exp.front,
+            back: exp.back,
+            tier,
+            type: 'cloze',
+            conceptId: currentConceptId,
+          })
+        }
+      } else if (front && back) {
+        cards.push({ front, back, tier, type, conceptId: currentConceptId })
+      }
       continue
     }
 
@@ -167,12 +307,15 @@ function parseCards(body: string): RawCard[] {
 
 interface FlashCard {
   id: string
+  type: CardType
+  tier: CardTier
   front: string
   back: string
   topic: string
   tags: string[]
   source_file: string
   created_at: string
+  concept_id?: string
 }
 
 interface TopicData {
@@ -231,22 +374,27 @@ async function main() {
 
     const topic = topicMap.get(topicSlug)!
     for (let i = 0; i < rawCards.length; i++) {
-      topic.cards.push({
+      const c = rawCards[i]
+      const card: FlashCard = {
         id: `${topicSlug}-${noteSlug}-${i}`,
-        front: rawCards[i].front,
-        back: rawCards[i].back,
+        type: c.type,
+        tier: c.tier,
+        front: c.front,
+        back: c.back,
         topic: topicSlug,
         tags,
         source_file: sourceFile,
         created_at: generatedAt,
-      })
+      }
+      if (c.conceptId) card.concept_id = c.conceptId
+      topic.cards.push(card)
       totalCards++
     }
   }
 
   if (totalCards === 0) {
     console.log('No flashcards found in any note.')
-    console.log('Add cards using: Question? #flashcard')
+    console.log('Add cards using: [T1] [standard] Question? #flashcard')
     console.log('                 Answer on the next line.')
     return
   }
@@ -256,7 +404,7 @@ async function main() {
 
   for (const [slug, topic] of topicMap.entries()) {
     const topicFile = {
-      version: '1.0',
+      version: '2.0',
       slug,
       title: topic.title,
       generated_at: generatedAt,
@@ -278,7 +426,7 @@ async function main() {
   }
 
   const index = {
-    version: '1.0',
+    version: '2.0',
     generated_at: generatedAt,
     topics: topicMetas,
   }

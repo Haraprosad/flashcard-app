@@ -16,6 +16,8 @@ const origSaveFolderIds = indexedDBService.saveFolderIds
 function makeCard(slug: string, i: number): FlashCard {
   return {
     id: `${slug}-source-${i}`,
+    type: 'standard',
+    tier: 1,
     front: `Question ${i + 1}`,
     back: `Answer ${i + 1}`,
     topic: slug,

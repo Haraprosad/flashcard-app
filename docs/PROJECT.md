@@ -56,19 +56,45 @@ No Anthropic API key in the React app. Claude API is only called by the separate
 
 ```typescript
 interface FlashcardsFile {
-  version: string;           // e.g. "1.0"
+  version: string;           // e.g. "2.0"
   generated_at: string;      // ISO timestamp
   cards: FlashCard[];
 }
 
+/**
+ * Card types:
+ * - 'standard' = Q&A. front is a question, back is the answer.
+ * - 'cloze'    = Fill-in-the-blank. front contains {{c1::text}} markers.
+ *                The app renders blanks in place of cloze markers.
+ *                Each cloze number (c1, c2, ...) is a separate card generated
+ *                by the sync script — so one source sentence may produce
+ *                multiple FlashCard objects, each blanking a different segment.
+ * - 'intuition' = Scenario-first. front paints a vivid picture/analogy,
+ *                 back reveals the concept through the scenario.
+ *
+ * Tiers (progressive disclosure):
+ * - 1 = Intuition — vivid scenario, analogy, "what does it feel like?" No jargon.
+ * - 2 = Mechanism — how it works, causal chain, precise explanation.
+ * - 3 = Formal — equations, specific numbers, edge cases, boundary conditions.
+ *
+ * The app enforces tier gating: Tier 2 cards only appear in review after
+ * the Tier 1 card for the same concept has been rated "Good" or better at
+ * least once. Tier 3 only after Tier 2. This prevents premature abstraction.
+ */
 interface FlashCard {
   id: string;                // Unique, stable. Format: "{filename}-{index}" e.g. "kubernetes-0"
-  front: string;             // The question / prompt
-  back: string;              // The answer / explanation
+  type: 'standard' | 'cloze' | 'intuition';  // Card format. Defaults to 'standard' if absent.
+  tier: 1 | 2 | 3;          // Progressive disclosure level. Defaults to 1 if absent.
+  front: string;             // Question / scenario / cloze template with {{cN::text}} markers
+  back: string;              // Answer / explanation / revealed cloze text
   topic: string;             // From Obsidian frontmatter: topic field
   tags: string[];            // From Obsidian frontmatter: tags array
   source_file: string;       // Original .md filename in vault
   created_at: string;        // ISO timestamp when card was generated
+  concept_id?: string;       // Groups tiered cards for the same concept.
+                             // e.g. "entropy" links T1+T2+T3 cards together.
+                             // Used for tier gating logic. Optional — if absent,
+                             // no tier gating is applied to this card.
 }
 ```
 
@@ -193,6 +219,11 @@ App
 - Session is seeded with due cards for the selected topic (or all topics for `/review/all`).
 - Due cards = cards where SR state has `due <= Date.now()`, plus all cards with `state === New`.
 - New cards are capped at 20 per session to avoid overwhelming.
+- **Progressive disclosure (tier gating):** Cards with `tier: 2` only appear in review after the Tier 1 card with the same `concept_id` has been rated "Good" or "Easy" at least once. Tier 3 only after Tier 2 is rated "Good" or "Easy". Cards without a `concept_id` are always eligible (no gating).
+- **Card type rendering:**
+  - `standard` cards: render `front` as question text, `back` as answer text (existing behavior).
+  - `intuition` cards: render `front` as scenario text (italic style), `back` as revealed explanation. Same flip interaction.
+  - `cloze` cards: render `front` with `{{cN::text}}` replaced by `___` blanks. Back shows full text with the previously-blanked segment highlighted. Tapping a blank reveals it (optional interactive mode).
 - Cards are shown as a stack. The top card is the active card.
 - Card displays `front` by default. Tap/click the card to flip and reveal `back`.
 - After flipping, the `RatingBar` appears with four buttons: Again / Hard / Good / Easy.

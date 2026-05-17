@@ -1,6 +1,8 @@
 import { useRef } from 'react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import type { FlashCard } from '../types'
+import { ClozeCard } from './ClozeCard'
+import { IntuitionCard } from './IntuitionCard'
 
 interface FlashCardProps {
   card: FlashCard
@@ -13,6 +15,18 @@ interface FlashCardProps {
 }
 
 const SWIPE_THRESHOLD = 80
+
+const TIER_COLORS: Record<number, string> = {
+  1: 'var(--color-good)',   // green — intuition
+  2: 'var(--accent)',       // amber — mechanism
+  3: 'var(--color-easy)',   // blue — formal
+}
+
+const TIER_LABELS: Record<number, string> = {
+  1: 'T1',
+  2: 'T2',
+  3: 'T3',
+}
 
 export function FlashCardComponent({
   card,
@@ -38,6 +52,8 @@ export function FlashCardComponent({
     cursor: isDraggingEnabled ? 'grab' : 'pointer',
     userSelect: 'none',
     WebkitUserSelect: 'none',
+    transformStyle: 'preserve-3d',
+    WebkitTransformStyle: 'preserve-3d',
   }
 
   const faceBase: React.CSSProperties = {
@@ -45,7 +61,9 @@ export function FlashCardComponent({
     inset: 0,
     borderRadius: '20px',
     padding: '32px',
-    backgroundColor: 'var(--bg-surface)',
+    backgroundColor: card.type === 'intuition' && !isFlipped
+      ? 'var(--bg-elevated)'
+      : 'var(--bg-surface)',
     border: '0.5px solid var(--bg-border)',
     display: 'flex',
     flexDirection: 'column',
@@ -97,6 +115,31 @@ export function FlashCardComponent({
         }
       }}
     >
+      {/* Tier badge */}
+      {card.tier && (
+        <div
+          data-testid={`tier-badge-${card.tier}`}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            zIndex: 10,
+            padding: '2px 8px',
+            borderRadius: '6px',
+            fontSize: '10px',
+            fontWeight: 700,
+            fontFamily: 'DM Sans, sans-serif',
+            letterSpacing: '0.05em',
+            color: TIER_COLORS[card.tier] ?? 'var(--text-muted)',
+            backgroundColor: 'var(--bg-base)',
+            border: '0.5px solid var(--bg-border)',
+          }}
+        >
+          {TIER_LABELS[card.tier] ?? 'T1'}
+        </div>
+      )}
+
       {/* Front face */}
       <div
         style={{
@@ -105,19 +148,25 @@ export function FlashCardComponent({
         }}
         aria-hidden={isFlipped}
       >
-        <p
-          style={{
-            fontFamily: 'DM Serif Display, serif',
-            fontSize: 'clamp(20px, 4vw, 28px)',
-            fontWeight: 400,
-            color: 'var(--text-primary)',
-            textAlign: 'center',
-            lineHeight: 1.4,
-            margin: 0,
-          }}
-        >
-          {card.front}
-        </p>
+        {card.type === 'cloze' ? (
+          <ClozeCard front={card.front} back={card.back} isFlipped={false} />
+        ) : card.type === 'intuition' ? (
+          <IntuitionCard front={card.front} back={card.back} isFlipped={false} />
+        ) : (
+          <p
+            style={{
+              fontFamily: 'DM Serif Display, serif',
+              fontSize: 'clamp(20px, 4vw, 28px)',
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              textAlign: 'center',
+              lineHeight: 1.4,
+              margin: 0,
+            }}
+          >
+            {card.front}
+          </p>
+        )}
         <span
           style={{
             position: 'absolute',
@@ -144,19 +193,25 @@ export function FlashCardComponent({
         }}
         aria-hidden={!isFlipped}
       >
-        <p
-          style={{
-            fontFamily: 'DM Sans, sans-serif',
-            fontSize: 'clamp(15px, 3vw, 18px)',
-            color: 'var(--text-primary)',
-            lineHeight: 1.6,
-            margin: 0,
-            width: '100%',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {card.back}
-        </p>
+        {card.type === 'cloze' ? (
+          <ClozeCard front={card.front} back={card.back} isFlipped={true} />
+        ) : card.type === 'intuition' ? (
+          <IntuitionCard front={card.front} back={card.back} isFlipped={true} />
+        ) : (
+          <p
+            style={{
+              fontFamily: 'DM Sans, sans-serif',
+              fontSize: 'clamp(15px, 3vw, 18px)',
+              color: 'var(--text-primary)',
+              lineHeight: 1.6,
+              margin: 0,
+              width: '100%',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {card.back}
+          </p>
+        )}
         <span
           style={{
             position: 'absolute',

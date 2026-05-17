@@ -112,13 +112,72 @@ export function TopicBrowserPage() {
   }
 
   if (error && !topics.length) {
+    const isNotFound = error.toLowerCase().includes('not found') || error.toLowerCase().includes('index.json')
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
+      <div
+        data-testid="error-state"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          padding: '16px',
+          paddingTop: 'calc(48px + env(safe-area-inset-top))',
+          maxWidth: '400px',
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
         <OfflineBanner />
-        <div data-testid="error-state">
-          <p>{error}</p>
-          <button onClick={() => fetchIndexFromDrive(accessToken!)}>Retry</button>
+        <div
+          style={{
+            fontSize: '40px',
+            lineHeight: 1,
+          }}
+          aria-hidden="true"
+        >
+          {isNotFound ? '📭' : '⚠️'}
         </div>
+        <p
+          style={{
+            fontFamily: 'DM Serif Display, serif',
+            fontSize: '22px',
+            fontWeight: 400,
+            color: 'var(--text-primary)',
+            margin: 0,
+          }}
+        >
+          {isNotFound ? 'No flashcards found' : 'Could not load topics'}
+        </p>
+        <p
+          style={{
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            margin: 0,
+          }}
+        >
+          {isNotFound
+            ? 'Your vault has no flashcard data yet. Run the sync script from your terminal to generate flashcards from your Obsidian notes.'
+            : error}
+        </p>
+        <button
+          onClick={() => fetchIndexFromDrive(accessToken!)}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: '0.5px solid var(--bg-border)',
+            backgroundColor: 'var(--bg-elevated)',
+            color: 'var(--text-primary)',
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            minHeight: '44px',
+          }}
+        >
+          {isNotFound ? 'Check again' : 'Retry'}
+        </button>
       </div>
     )
   }

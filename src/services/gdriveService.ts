@@ -20,12 +20,15 @@ const FlashcardsIndexSchema = z.object({
 
 const FlashCardSchema = z.object({
   id: z.string().min(1),
+  type: z.enum(['standard', 'cloze', 'intuition']).default('standard'),
+  tier: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
   front: z.string(),
   back: z.string(),
   topic: z.string(),
   tags: z.array(z.string()),
   source_file: z.string(),
   created_at: z.string(),
+  concept_id: z.string().optional(),
 })
 
 const TopicFileSchema = z.object({
@@ -40,6 +43,15 @@ const TopicFileSchema = z.object({
 
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3'
 const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3'
+
+// import.meta.env is undefined outside Vite's build/dev server (e.g. in Cucumber tests
+// running via tsx/esm). Use nullish coalescing so the module loads in all environments.
+const _env = (() => {
+  try { return (import.meta.env ?? {}) as Record<string, string> }
+  catch { return {} as Record<string, string> }
+})()
+const VAULT_FOLDER_NAME = _env.VITE_GDRIVE_FOLDER_NAME ?? 'ObsidianSecondBrain'
+const FLASHCARDS_FOLDER_NAME = _env.VITE_GDRIVE_FLASHCARDS_FOLDER ?? 'flashcards'
 
 interface DriveFileEntry {
   id: string
@@ -117,9 +129,8 @@ async function getVaultFolderId(token: string): Promise<string> {
   const cached = await indexedDBService.getFolderIds()
   if (cached['vault']) return cached['vault']
 
-  const vaultName = import.meta.env.VITE_GDRIVE_FOLDER_NAME as string
-  const folderId = await findFolderId(vaultName, null, token)
-  if (!folderId) throw new Error(`Vault folder "${vaultName}" not found in Drive`)
+  const folderId = await findFolderId(VAULT_FOLDER_NAME, null, token)
+  if (!folderId) throw new Error(`Vault folder "${VAULT_FOLDER_NAME}" not found in Drive`)
 
   await indexedDBService.saveFolderIds({ ...cached, vault: folderId })
   return folderId
@@ -133,10 +144,9 @@ async function getOrCreateFlashcardsFolderId(token: string): Promise<string> {
   const cached = await indexedDBService.getFolderIds()
   if (cached['flashcards']) return cached['flashcards']
 
-  const flashcardsName = import.meta.env.VITE_GDRIVE_FLASHCARDS_FOLDER as string
   const vaultFolderId = await getVaultFolderId(token)
 
-  let folderId = await findFolderId(flashcardsName, vaultFolderId, token)
+  let folderId = await findFolderId(FLASHCARDS_FOLDER_NAME, vaultFolderId, token)
 
   if (!folderId) {
     // Create the flashcards subfolder on first sync
@@ -147,7 +157,7 @@ async function getOrCreateFlashcardsFolderId(token: string): Promise<string> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: flashcardsName,
+        name: FLASHCARDS_FOLDER_NAME,
         mimeType: 'application/vnd.google-apps.folder',
         parents: [vaultFolderId],
       }),
