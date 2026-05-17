@@ -45,6 +45,7 @@ export function ProgressPage() {
   const streakData = useMemo(() => progressStore.getStreakData(), [])
   const heatmapData = useMemo(() => progressStore.getHeatmapData(), [])
   const totalReviews = useMemo(() => progressStore.getTotalReviews(), [])
+  const firstAttemptStats = useMemo(() => progressStore.getFirstAttemptStats(), [])
 
   const topicStatsList = useMemo(
     () =>
@@ -122,6 +123,13 @@ export function ProgressPage() {
       <div style={{ display: 'flex', gap: '8px' }}>
         <StatBox label="Total Reviews" value={totalReviews} testId="total-reviews" />
         <StatBox label="Total Cards" value={totalCards} testId="total-cards" />
+        {firstAttemptStats.total > 0 && (
+          <StatBox
+            label="First-try Rate"
+            value={`${Math.round(firstAttemptStats.rate)}%`}
+            testId="first-attempt-rate"
+          />
+        )}
       </div>
 
       {topicStatsList.length > 0 && (

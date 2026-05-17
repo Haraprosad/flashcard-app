@@ -1,6 +1,6 @@
 # TASKS.md — Flashcard App
 > Track progress here. Check boxes as you complete tasks. Never mark a task done until `npm run test:all` passes.
-> Last updated: 2026-05-16
+> Last updated: 2026-05-17
 
 ---
 
@@ -686,6 +686,151 @@
 - [x] `SettingsPage` — "Backup & Sync" section with last-synced timestamp
 - [ ] `TopicBrowserPage` — show "Progress synced X ago" in SyncStatusBar alongside card sync
 - [ ] Offline badge in `OfflineBanner` — distinguish "cards offline" from "progress not yet synced"
+
+---
+
+## Phase 16: Science-Backed Learning UX Improvements ✅ COMPLETE
+
+> **Status:** All 110 BDD scenarios GREEN · 7 unit tests GREEN · `tsc --noEmit` clean
+
+### 16.1 Confidence Check Before Challenge Answer
+> **Science:** Koriat & Bjork (2006) — metacognitive calibration; forces learners to surface the illusion-of-knowing before seeing options.
+
+- [ ] Add `confidenceRating: 'low' | 'medium' | 'high' | null` to `ExplorationCard` state
+- [ ] Add 3-button row in `ChallengeInput` that renders BEFORE the options list:
+  - [ ] Buttons: `[ Low ]  [ Medium ]  [ High ]`
+  - [ ] Options list is disabled (pointer-events: none, muted opacity) until confidence is selected
+  - [ ] Once selected, highlight chosen button (amber border) and enable options
+  - [ ] `data-testid="confidence-low"`, `data-testid="confidence-medium"`, `data-testid="confidence-high"`
+- [ ] Store `confidenceRating` alongside challenge result in `advanceExploration` payload
+- [ ] Extend `ExplorationResult` type in `src/types/index.ts` to include `confidenceRating` and `firstAttemptCorrect`
+- [ ] Write `features/confidence-calibration.feature` — scenarios:
+  - [ ] Options disabled until confidence selected
+  - [ ] Confidence rating stored on correct first attempt
+  - [ ] Confidence rating stored on wrong first attempt
+  - [ ] Confidence chip visible in result state
+- [ ] Run → RED → GREEN
+
+### 16.2 Delayed Explanation Reveal on Wrong Answer
+> **Science:** Butler et al. (2007) — a brief delay before seeing corrective feedback improves long-term retention vs. instant reveal.
+
+- [ ] In `ChallengeInput`, when `challengeState === 'wrong'`:
+  - [ ] Show `"No, you are wrong ✗"` header immediately (current behaviour — keep)
+  - [ ] Replace immediate explanation render with a `"See why →"` button
+  - [ ] On tap, animate explanation in (Framer Motion fade + y slide, same as current)
+  - [ ] `data-testid="see-why-button"`, `data-testid="challenge-explanation"`
+  - [ ] Explanation state: `'hidden' | 'revealed'` — resets to `'hidden'` on `handleTryAgain`
+- [ ] Write `features/delayed-feedback.feature` — scenarios:
+  - [ ] Explanation hidden on wrong answer
+  - [ ] "See why" button visible on wrong answer
+  - [ ] Explanation revealed after tapping "See why"
+  - [ ] Explanation resets to hidden on "Try again"
+- [ ] Run → RED → GREEN
+
+### 16.3 Pre-Session Recall Prompt
+> **Science:** Roediger & Karpicke (2006) — attempting recall before exposure strengthens encoding even when the attempt is incorrect.
+
+- [ ] Create `src/components/RecallPrompt.tsx`
+  - [ ] Full-screen interstitial shown ONCE per topic per session, before first card renders
+  - [ ] Content: `"Before we start — what do you already know about [topic]?"`
+  - [ ] Subtext: `"Take 30 seconds to think. No input needed — just think."`
+  - [ ] Single CTA: `"I've thought about it → Continue"`
+  - [ ] `data-testid="recall-prompt"`, `data-testid="recall-continue"`
+  - [ ] Framer Motion fade-in, 300ms, no spring bounce (matches brand)
+  - [ ] NOT shown for `/review/all` (topic label is ambiguous) or for single-card sessions
+  - [ ] NOT shown if session is a re-queue ("Review again" from SessionComplete)
+- [ ] In `ReviewSessionPage`, render `RecallPrompt` before first card when:
+  - [ ] `mode !== 'fresh'` — fresh start is already a deliberate re-learning intent
+  - [ ] `showRecallPrompt` local state; dismissed on continue tap
+- [ ] Write `features/recall-prompt.feature` — scenarios:
+  - [ ] Recall prompt shown at session start for topic with cards
+  - [ ] Recall prompt not shown for /review/all
+  - [ ] Recall prompt not shown in fresh mode
+  - [ ] Cards begin after continue tapped
+- [ ] Run → RED → GREEN
+
+### 16.4 Skip Friction — Reduce Bypass of Exploration
+> **Science:** Bjork & Bjork (2011) — desirable difficulties only work if the difficulty is actually imposed; a visible, easy skip defeats the mechanism.
+
+- [ ] Move "Skip to flashcards" out of primary button zone:
+  - [ ] Remove the `<a>` link from the main bottom-nav area
+  - [ ] Add a `⋯` icon button (top-right of exploration card, 44×44px)
+  - [ ] On tap, show a small inline confirmation:
+    - [ ] `"Skip building the mental model?"`
+    - [ ] `"Your flashcards will unlock, but the concept won't be anchored."`
+    - [ ] Buttons: `[ Keep going ]` (primary)  `[ Skip anyway ]` (ghost, muted)
+  - [ ] `data-testid="exploration-overflow-menu"`, `data-testid="skip-confirm-cancel"`, `data-testid="skip-confirm-proceed"`
+- [ ] Write `features/exploration-skip-friction.feature` — scenarios:
+  - [ ] Skip link not visible in primary button area
+  - [ ] Overflow menu opens on ⋯ tap
+  - [ ] Confirmation dialog shown before skipping
+  - [ ] "Keep going" dismisses dialog, returns to exploration
+  - [ ] "Skip anyway" calls onSkip and advances
+- [ ] Run → RED → GREEN
+
+### 16.5 First-Attempt Tracking
+> **Science:** Generation effect nuance — first-attempt success vs. retry success produce meaningfully different memory traces.
+
+- [ ] In `ExplorationCard`/`ChallengeInput`, track `attemptCount: number` (starts at 0, increments on each `handleCheckAnswer` call)
+- [ ] Derive `firstAttemptCorrect: boolean` — true only when `attemptCount === 0` at time of `challengeState === 'correct'`
+- [ ] Pass `firstAttemptCorrect` through `onComplete(result)` callback (update prop signature)
+- [ ] In `reviewStore.advanceExploration`, store result on the card's exploration record
+- [ ] Surface in `ProgressPage`:
+  - [ ] Add `"First-try rate"` stat to per-topic stats row: `X% of explorations correct on first attempt`
+  - [ ] Compute from `progressStore` — add `getFirstAttemptStats()` method
+  - [ ] `data-testid="first-attempt-rate"`
+- [ ] Write `features/first-attempt-tracking.feature` — scenarios:
+  - [ ] First-attempt correct recorded when answered right on first try
+  - [ ] First-attempt incorrect recorded when answered wrong then retried
+  - [ ] First-try rate displayed in ProgressPage
+- [ ] Run → RED → GREEN
+
+### 16.6 Tier-Respecting Interleave Shuffle
+> **Science:** Rohrer & Taylor (2007) — interleaved card order (T1-A, T1-B, T2-A, T2-B) produces 43% better delayed recall than blocked (T1-A, T2-A, T3-A, T1-B…).
+
+- [ ] Create `src/services/interleaveService.ts`
+  - [ ] `interleaveByTier(cards: FlashCard[]): FlashCard[]`
+    - [ ] Group cards by tier: `tier1[]`, `tier2[]`, `tier3[]`
+    - [ ] Within each tier group, shuffle randomly
+    - [ ] Interleave: pick one from each non-empty tier bucket in rotation
+    - [ ] Result preserves T1-before-T2-before-T3 ordering constraint (tier groups never mix)
+    - [ ] Exploration cards always stay at position 0 (before all flashcards)
+  - [ ] Export `interleaveByTier` — pure function, fully testable
+- [ ] Update `reviewStore.loadSession` to call `interleaveByTier` after `getTierEligibleCards`
+- [ ] Write `interleaveService.test.ts` unit tests:
+  - [ ] All T1 cards appear before any T2 cards
+  - [ ] Within T1, cards from different concepts alternate
+  - [ ] Exploration cards unaffected (position 0)
+  - [ ] Single-concept note: order unchanged (no interleaving possible)
+- [ ] Write `features/interleaved-review.feature` — scenarios:
+  - [ ] Cards from different concepts alternate within same tier
+  - [ ] Tier order preserved: all T1 before T2 before T3
+  - [ ] Exploration card always first
+- [ ] Run unit tests → GREEN
+- [ ] Run BDD → GREEN
+
+### 16.7 Exploration Mode Label Update
+> **Science:** Framing effect — "Concept Introduction" (passive, consumptive) vs. "Build the mental model" (active, generative) primes different learning postures.
+
+- [ ] In `ReviewSessionPage.tsx`, change label from `"Concept Introduction"` → `"Build the mental model"`
+- [ ] Update `data-testid` if any BDD step definitions match on label text (search `step_definitions/` for the string)
+- [ ] Verify no snapshot tests or BDD steps assert the old string literal
+- [ ] Run `npm run test:bdd` → GREEN
+
+### 16.8 Visual & UX Polish
+- [ ] Confidence buttons: amber border on selected, muted on unselected; min 44×44px
+- [ ] "See why →" button: ghost style matching "Try again" button; arrow animates on hover
+- [ ] RecallPrompt: DM Serif Display title, DM Sans body, same dark background as exploration mode
+- [ ] Overflow menu (⋯): positioned top-right without overlapping step indicator
+- [ ] First-try rate in ProgressPage: same stat row style as existing stat chips
+- [ ] `prefers-reduced-motion`: all new animations respect existing `MotionConfig` in `main.tsx`
+
+### 16.9 Full Suite Check
+- [ ] `npm run test:bdd` → all GREEN (87 + new scenarios)
+- [ ] `npm run test` → all GREEN (including `interleaveService.test.ts`)
+- [ ] `npx tsc --noEmit` → clean
+- [ ] All new touch targets ≥ 44×44px verified
+- [ ] All new interactive elements have `aria-label` or visible text label
 
 ---
 

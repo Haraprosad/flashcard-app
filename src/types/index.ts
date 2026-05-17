@@ -72,6 +72,23 @@ export interface CardSRData {
 // Maps to FSRS Rating: Again=1, Hard=2, Good=3, Easy=4
 export type Rating = 'Again' | 'Hard' | 'Good' | 'Easy'
 
+export type ConfidenceRating = 'low' | 'medium' | 'high'
+
+/** Result produced when user completes an exploration card */
+export interface ExplorationResult {
+  conceptId: string
+  confidenceRating: ConfidenceRating | null
+  firstAttemptCorrect: boolean | null  // null when no challenge step (scenario/guide only)
+}
+
+/** Per-concept exploration record stored in progressStore */
+export interface ExplorationConceptRecord {
+  conceptId: string
+  completedAt: string           // ISO timestamp
+  confidenceRating: ConfidenceRating | null
+  firstAttemptCorrect: boolean | null
+}
+
 export interface StreakData {
   current: number
   longest: number

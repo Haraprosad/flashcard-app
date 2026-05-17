@@ -54,7 +54,7 @@ Feature: Exploration Cards — Concept Formation Before Retrieval
     And I should see the step indicator with 4 dots
     And I should see the scenario step body text
     And I should see a "Next" button
-    And I should see a "Skip to flashcards" link
+    And I should see the overflow menu button
 
   Scenario: ExplorationCard advances through steps on Next click
     Given I render an ExplorationCard with 4 steps
@@ -64,21 +64,25 @@ Feature: Exploration Cards — Concept Formation Before Retrieval
 
   Scenario: correct multiple-choice answer shows success
     Given I render an ExplorationCard at the challenge step with multiple-choice options
-    When I select the correct answer
+    When I select the "High" confidence level
+    And I select the correct answer
     And I click the "Check answer" button
     Then I should see a success message
     And I should see a "Start flashcards" button
 
-  Scenario: wrong multiple-choice answer shows explanation and retry
+  Scenario: wrong multiple-choice answer shows error state and retry
     Given I render an ExplorationCard at the challenge step with multiple-choice options
-    When I select a wrong answer
+    When I select the "Low" confidence level
+    And I select a wrong answer
     And I click the "Check answer" button
-    Then I should see the challenge explanation text
+    Then I should see "No, you are wrong" message
+    And I should see the "See why" button
     And I should see a "Try again" button
 
   Scenario: correct free-text answer (case-insensitive) shows success
     Given I render an ExplorationCard at the challenge step with free-text input
-    When I type the correct answer in lower case
+    When I select the "High" confidence level
+    And I type the correct answer in lower case
     And I click the "Check answer" button
     Then I should see a success message
 
@@ -88,7 +92,8 @@ Feature: Exploration Cards — Concept Formation Before Retrieval
     When I click the "Start flashcards" button
     Then the onComplete callback should have been called
 
-  Scenario: Skip to flashcards link calls onSkip
+  Scenario: Skip via overflow menu calls onSkip
     Given I render an ExplorationCard with 4 steps
-    When I click "Skip to flashcards"
+    When I click the overflow menu button
+    And I click the "Skip anyway" button
     Then the onSkip callback should have been called

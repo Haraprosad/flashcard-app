@@ -9,7 +9,8 @@ import { SwipeCardStack } from '../components/SwipeCardStack'
 import { RatingBar } from '../components/RatingBar'
 import { SessionComplete } from '../components/SessionComplete'
 import { ExplorationCard } from '../components/ExplorationCard'
-import type { Rating } from '../types'
+import { RecallPrompt } from '../components/RecallPrompt'
+import type { Rating, ExplorationResult } from '../types'
 
 function XIcon() {
   return (
@@ -50,6 +51,8 @@ export function ReviewSessionPage() {
   // so the init effect re-runs without a page reload.
   const [sessionKey, setSessionKey] = useState(0)
   const prevTopicSlug = useRef<string | null | undefined>(undefined)
+  // 16.3 — Recall prompt shown once per session (not for /all or fresh mode)
+  const [showRecallPrompt, setShowRecallPrompt] = useState(false)
 
   useEffect(() => {
     // On first run prevTopicSlug is undefined — skip.
@@ -67,10 +70,15 @@ export function ReviewSessionPage() {
       if (slug === 'all') {
         const cachedCards = getAllCachedCards()
         loadSession('all', cachedCards, mode)
+        // No recall prompt for /review/all
       } else {
         const topic = await fetchTopic(slug, accessToken)
         const cards = topic?.cards ?? getCardsByTopic(slug)
         loadSession(slug, cards, mode)
+        // 16.3 — Show recall prompt only for single-topic, non-fresh sessions
+        if (mode !== 'fresh' && cards.length > 1) {
+          setShowRecallPrompt(true)
+        }
       }
     }
     init()
@@ -277,18 +285,25 @@ export function ReviewSessionPage() {
               marginBottom: '20px',
             }}
           >
-            Concept Introduction
+            Build the mental model
           </div>
           <ExplorationCard
             steps={currentCard.steps}
-            onComplete={() => {
-              if (currentCard.concept_id) advanceExploration(currentCard.concept_id)
+            conceptId={currentCard.concept_id}
+            onComplete={(result: ExplorationResult) => {
+              if (currentCard.concept_id) advanceExploration(currentCard.concept_id, result)
             }}
             onSkip={() => {
               if (currentCard.concept_id) advanceExploration(currentCard.concept_id)
             }}
           />
         </div>
+      ) : showRecallPrompt ? (
+        // 16.3 — Recall prompt interstitial
+        <RecallPrompt
+          topicTitle={titleLabel}
+          onContinue={() => setShowRecallPrompt(false)}
+        />
       ) : (
         <div
           style={{

@@ -180,24 +180,24 @@ Given('I have a topic with only T1 cards for concept {string} \\(no exploration 
 })
 
 Given('I render an ExplorationCard with 4 steps', function () {
-  this.onComplete = { called: false }
+  this.onComplete = { called: false, result: null }
   this.onSkip = { called: false }
   render(
     <ExplorationCard
       steps={STEPS}
-      onComplete={() => { this.onComplete.called = true }}
+      onComplete={(result) => { this.onComplete = { called: true, result } }}
       onSkip={() => { this.onSkip.called = true }}
     />,
   )
 })
 
 Given('I render an ExplorationCard at the challenge step with multiple-choice options', function () {
-  this.onComplete = { called: false }
+  this.onComplete = { called: false, result: null }
   this.onSkip = { called: false }
   render(
     <ExplorationCard
       steps={STEPS}
-      onComplete={() => { this.onComplete.called = true }}
+      onComplete={(result) => { this.onComplete = { called: true, result } }}
       onSkip={() => { this.onSkip.called = true }}
     />,
   )
@@ -209,12 +209,12 @@ Given('I render an ExplorationCard at the challenge step with multiple-choice op
 })
 
 Given('I render an ExplorationCard at the challenge step with free-text input', function () {
-  this.onComplete = { called: false }
+  this.onComplete = { called: false, result: null }
   this.onSkip = { called: false }
   render(
     <ExplorationCard
       steps={FREE_TEXT_STEPS}
-      onComplete={() => { this.onComplete.called = true }}
+      onComplete={(result) => { this.onComplete = { called: true, result } }}
       onSkip={() => { this.onSkip.called = true }}
     />,
   )
@@ -225,6 +225,10 @@ Given('I render an ExplorationCard at the challenge step with free-text input', 
 })
 
 Given('I have answered the challenge correctly', function () {
+  // Phase 16.1: must select confidence first
+  const confidenceBtn = screen.getByTestId('confidence-high')
+  fireEvent.click(confidenceBtn)
+
   const correctBtn = screen.getAllByRole('button').find((b) =>
     b.textContent?.trim() === 'S',
   )
@@ -267,6 +271,11 @@ When('I click {string}', function (label: string) {
 })
 
 When('I select the correct answer', function () {
+  // Phase 16.1: if confidence not yet selected, default to "high"
+  const highBtn = screen.queryByTestId('confidence-high')
+  if (highBtn && highBtn.getAttribute('aria-pressed') !== 'true') {
+    fireEvent.click(highBtn)
+  }
   // Correct option is "S" (index 1 in STEPS challenge)
   const btn = screen.getAllByRole('button').find((b) => b.textContent?.trim() === 'S')
   if (!btn) throw new Error('Correct answer button "S" not found')
@@ -274,6 +283,11 @@ When('I select the correct answer', function () {
 })
 
 When('I select a wrong answer', function () {
+  // Phase 16.1: if confidence not yet selected, default to "low"
+  const lowBtn = screen.queryByTestId('confidence-low')
+  if (lowBtn && lowBtn.getAttribute('aria-pressed') !== 'true') {
+    fireEvent.click(lowBtn)
+  }
   // Wrong option is "E" (index 0)
   const btn = screen.getAllByRole('button').find((b) => b.textContent?.trim() === 'E')
   if (!btn) throw new Error('Wrong answer button "E" not found')
@@ -352,9 +366,30 @@ Then('I should see a {string} button', function (label: string) {
   if (!btn) throw new Error(`Button "${label}" not found`)
 })
 
-Then('I should see a {string} link', function (label: string) {
-  const link = screen.getByRole('link', { name: new RegExp(label, 'i') })
-  if (!link) throw new Error(`Link "${label}" not found`)
+Then('I should see the {string} button', function (label: string) {
+  const btn = screen.getByRole('button', { name: new RegExp(label, 'i') })
+  if (!btn) throw new Error(`Button "${label}" not found`)
+})
+
+Then('I should see the overflow menu button', function () {
+  const btn = screen.queryByTestId('exploration-overflow-menu')
+  if (!btn) throw new Error('Overflow menu button not found')
+})
+
+Then('I should not see a link with text {string}', function (text: string) {
+  const link = screen.queryByRole('link', { name: new RegExp(text, 'i') })
+  if (link) throw new Error(`Link "${text}" should not be visible`)
+})
+
+Then('I should see {string} message', function (text: string) {
+  if (!screen.queryByText(new RegExp(text, 'i'))) {
+    throw new Error(`"${text}" message not found`)
+  }
+})
+
+When('I click the overflow menu button', function () {
+  const btn = screen.getByTestId('exploration-overflow-menu')
+  fireEvent.click(btn)
 })
 
 Then('I should see the problem step body text', function () {
@@ -376,6 +411,9 @@ Then('I should see a success message', function () {
 })
 
 Then('I should see the challenge explanation text', function () {
+  // Phase 16.2: explanation is hidden by default; click "See why" if present
+  const seeWhyBtn = screen.queryByTestId('see-why-button')
+  if (seeWhyBtn) fireEvent.click(seeWhyBtn)
   if (!screen.queryByText(/S is the standard symbol/i)) {
     throw new Error('Challenge explanation text not found')
   }

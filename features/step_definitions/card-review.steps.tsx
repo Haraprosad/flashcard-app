@@ -51,6 +51,39 @@ function renderReviewPage(slug: string) {
   )
 }
 
+/** Wait for the review session to be "ready" — past the recall prompt if shown. */
+async function waitForReviewSessionReady() {
+  await waitFor(
+    () => {
+      const card = screen.queryByTestId('flash-card')
+      const complete = screen.queryByTestId('session-complete')
+      const recall = screen.queryByTestId('recall-prompt')
+      const exploration = screen.queryByTestId('exploration-card')
+      if (!card && !complete && !recall && !exploration) {
+        throw new Error('Waiting for review session to load')
+      }
+    },
+    { timeout: 5000 },
+  )
+  // Phase 16.3: if recall prompt is shown, click through it to reach the cards
+  const recall = screen.queryByTestId('recall-prompt')
+  if (recall) {
+    const continueBtn = screen.getByTestId('recall-continue')
+    fireEvent.click(continueBtn)
+    await waitFor(
+      () => {
+        const card = screen.queryByTestId('flash-card')
+        const complete = screen.queryByTestId('session-complete')
+        const exploration = screen.queryByTestId('exploration-card')
+        if (!card && !complete && !exploration) {
+          throw new Error('Waiting for card after recall prompt')
+        }
+      },
+      { timeout: 3000 },
+    )
+  }
+}
+
 Before(function () {
   indexedDBService.getFolderIds = async () => ({})
   indexedDBService.saveFolderIds = async () => {}
@@ -159,21 +192,7 @@ Given('the review session is loaded with {int} due card(s)', async function (cou
   }
 
   renderReviewPage(slug)
-  await waitFor(
-    () => {
-      const page = screen.queryByTestId('review-session-page')
-      if (!page) throw new Error('Waiting for review session page')
-    },
-    { timeout: 5000 },
-  )
-  await waitFor(
-    () => {
-      const card = screen.queryByTestId('flash-card')
-      const complete = screen.queryByTestId('session-complete')
-      if (!card && !complete) throw new Error('Waiting for card or complete screen')
-    },
-    { timeout: 5000 },
-  )
+  await waitForReviewSessionReady()
 })
 
 Given('the current card is showing its back', async function () {
@@ -201,21 +220,7 @@ Given('the current card is showing its front', async function () {
 
 When('the user starts a review session for {string}', async function (slug: string) {
   renderReviewPage(slug)
-  await waitFor(
-    () => {
-      const page = screen.queryByTestId('review-session-page')
-      if (!page) throw new Error('Waiting for review session page')
-    },
-    { timeout: 5000 },
-  )
-  await waitFor(
-    () => {
-      const card = screen.queryByTestId('flash-card')
-      const complete = screen.queryByTestId('session-complete')
-      if (!card && !complete) throw new Error('Waiting for card or complete screen')
-    },
-    { timeout: 5000 },
-  )
+  await waitForReviewSessionReady()
 })
 
 When('the user taps the card', async function () {

@@ -15,11 +15,11 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 
 ## Phase
 
-**Current:** Phase 15 ✅ COMPLETE — Battle-Proof SR State Persistence (IndexedDB + Drive Backup)
+**Current:** Phase 16 ✅ COMPLETE — Science-Backed Learning UX Improvements
 
 **Updated:** 2026-05-17
 
-**Last session:** Completed Phase 15 in full. indexedDBService v2 (sr_state + review_log IDB stores, localStorage→IDB migration on first open). srStateService: in-memory cache backed by IDB (sync reads, async writes), init() for app startup, _resetForTests/_deleteCardForTests/_setSRStateForTests for testing. progressStore: same pattern for streak_data + review_log, _setStreakDataForTests/_setReviewLogForTests helpers. srStateDriveService: fetch/push/merge for sr_state.json (Drive multipart upload, Zod validation, highest-reps merge, offline pending flag). authStore: signInAndSync does Drive merge on login, isSyncing state. GoogleSignInButton: scope upgraded to drive.file + drive.readonly, calls signInAndSync. reviewStore: post-session Drive push (fire-and-forget), driveSyncStatus state. SessionComplete: drive sync badge (syncing/synced/failed). SettingsPage: Backup & Sync section (sync now, restore from Drive, export JSON). App.tsx: init() called on mount. All 87/87 BDD GREEN, tsc clean.
+**Last session:** Completed Phase 16 in full. ExplorationCard: confidence gating (3-button row before options, options locked until confidence selected), delayed explanation reveal (hidden until "See why →" tapped), skip friction (⋯ overflow menu replaces "Skip to flashcards" link), first-attempt tracking (attemptCount + firstAttemptCorrect in ExplorationResult). RecallPrompt component: full-screen pre-session interstitial (not shown for /all or fresh mode). ReviewSessionPage: recall prompt wired in, "Build the mental model" label. interleaveService: fixed algorithm (T1→T2→T3 ordered, concepts interleaved within each tier). progressStore: recordExplorationResult + getFirstAttemptStats, ProgressPage shows first-try rate. Fixed exploration-cards.feature and step defs for Phase 16 changes. Created 6 new feature files (confidence-calibration, delayed-feedback, recall-prompt, exploration-skip-friction, first-attempt-tracking, interleaved-review) with step definitions. Fixed card-review/offline timeouts caused by recall prompt. 7 interleaveService unit tests. All 110/110 BDD GREEN, tsc clean.
 
 ---
 
@@ -39,6 +39,7 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 - [x] Phase 13: Enhanced Card Types — CardType ('standard'|'cloze'|'intuition'), CardTier (1|2|3), concept_id. ClozeCard (blanks+revealed highlight), IntuitionCard (italic DM Serif, amber "Imagine:" prefix), FlashCard dispatches by type with tier badge (T1=green, T2=amber, T3=blue). tierService (getTierEligibleCards gating T1→T2→T3). 66/66 BDD GREEN.
 - [x] Phase 14: Exploration Cards — ExplorationStep type + 'exploration' CardType. srStateService exploration methods. tierService exploration gating. ExplorationCard 4-step stepper component (scenario/problem/guide/challenge, step dots, MC+free-text challenge). reviewStore prepends unexplored exploration cards, advanceExploration unlocks T1 cards. ReviewSessionPage renders full-screen exploration mode. 79/79 BDD GREEN.
 - [x] Phase 15: Battle-Proof SR State Persistence — indexedDBService v2 (sr_state + review_log stores + localStorage migration). srStateService in-memory cache backed by IDB. progressStore same pattern. srStateDriveService (fetch/push/merge, offline pending flag). authStore signInAndSync with Drive merge on login. reviewStore post-session Drive push + driveSyncStatus. SessionComplete sync badge. SettingsPage Backup & Sync section. 87/87 BDD GREEN, tsc clean.
+- [x] Phase 16: Science-Backed Learning UX — ExplorationCard confidence gating + delayed explanation + skip friction (⋯ menu) + first-attempt tracking. RecallPrompt interstitial. interleaveService (T1→T2→T3, concepts interleaved within tier). 6 new feature files. 7 unit tests. 110/110 BDD GREEN, tsc clean.
 
 ## In Progress
 
@@ -46,7 +47,7 @@ None.
 
 ## Next 3
 
-1. Phase 11: Run full BDD suite + unit tests + E2E tests
+1. Phase 11: Run full BDD suite + unit tests + E2E tests (BDD ✅ 110/110 — still need E2E + remaining unit tests)
 2. Phase 12: Deploy to Netlify (Google Cloud Console OAuth setup + env vars)
 3. Phase 13.8 / 14.8: Visual polish (intuition card gradient, guide step JetBrains Mono)
 

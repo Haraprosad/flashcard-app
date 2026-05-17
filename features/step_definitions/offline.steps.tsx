@@ -1,6 +1,6 @@
 import React from 'react'
 import { Given, When, Then, Before, After } from '@cucumber/cucumber'
-import { render, screen, waitFor, act, cleanup } from '@testing-library/react'
+import { render, screen, waitFor, act, cleanup, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useAuthStore } from '../../src/stores/authStore'
@@ -217,10 +217,25 @@ When('the user opens the review session for {string}', async function (slug: str
     () => {
       const card = screen.queryByTestId('flash-card')
       const complete = screen.queryByTestId('session-complete')
-      if (!card && !complete) throw new Error('Waiting for review session to load')
+      const recall = screen.queryByTestId('recall-prompt')
+      const exploration = screen.queryByTestId('exploration-card')
+      if (!card && !complete && !recall && !exploration) throw new Error('Waiting for review session to load')
     },
     { timeout: 5000 },
   )
+  // Phase 16.3: click through recall prompt if shown
+  const recall = screen.queryByTestId('recall-prompt')
+  if (recall) {
+    fireEvent.click(screen.getByTestId('recall-continue'))
+    await waitFor(
+      () => {
+        const card = screen.queryByTestId('flash-card')
+        const complete = screen.queryByTestId('session-complete')
+        if (!card && !complete) throw new Error('Waiting for card after recall prompt')
+      },
+      { timeout: 3000 },
+    )
+  }
 })
 
 When('the user opens the app', async function () {

@@ -1,10 +1,11 @@
-import type { StreakData, ReviewLogEntry, TopicStats, FlashCard } from '../types'
+import type { StreakData, ReviewLogEntry, TopicStats, FlashCard, ExplorationConceptRecord } from '../types'
 import { srStateService } from '../services/srStateService'
 import { indexedDBService } from '../services/indexedDBService'
 
 // In-memory cache
 let _streakData: StreakData = { current: 0, longest: 0, last_review_date: null }
 let _reviewLog: Record<string, number> = {}
+let _explorationRecords: Record<string, ExplorationConceptRecord> = {}
 let _initialized = false
 
 function todayStr(): string {
@@ -112,6 +113,24 @@ export const progressStore = {
     return Object.values(_reviewLog).reduce((sum, c) => sum + c, 0)
   },
 
+  /** Record the result of completing an exploration card (Phase 16.5) */
+  recordExplorationResult(record: ExplorationConceptRecord): void {
+    _explorationRecords[record.conceptId] = record
+    // Persist to localStorage for now (lightweight; can move to IDB later)
+    const stored = JSON.parse(localStorage.getItem('exploration_records') ?? '{}')
+    stored[record.conceptId] = record
+    localStorage.setItem('exploration_records', JSON.stringify(stored))
+  },
+
+  /** Returns per-topic first-attempt accuracy stats (Phase 16.5) */
+  getFirstAttemptStats(): { total: number; correct: number; rate: number } {
+    const records = Object.values(_explorationRecords)
+    const withChallenge = records.filter((r) => r.firstAttemptCorrect !== null)
+    const correct = withChallenge.filter((r) => r.firstAttemptCorrect === true).length
+    const rate = withChallenge.length > 0 ? (correct / withChallenge.length) * 100 : 0
+    return { total: withChallenge.length, correct, rate }
+  },
+
   /**
    * Overwrite in-memory caches from an externally merged state (after Drive merge).
    */
@@ -132,6 +151,7 @@ export const progressStore = {
   _resetForTests(): void {
     _streakData = { current: 0, longest: 0, last_review_date: null }
     _reviewLog = {}
+    _explorationRecords = {}
     _initialized = false
   },
 

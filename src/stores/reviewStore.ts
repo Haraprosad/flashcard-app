@@ -1,8 +1,9 @@
 import { create } from 'zustand'
-import type { FlashCard, Rating } from '../types'
+import type { FlashCard, Rating, ExplorationResult } from '../types'
 import { fsrsService } from '../services/fsrsService'
 import { srStateService } from '../services/srStateService'
 import { getTierEligibleCards } from '../services/tierService'
+import { interleaveByTier } from '../services/interleaveService'
 import { progressStore } from './progressStore'
 import { srStateDriveService } from '../services/srStateDriveService'
 import { indexedDBService } from '../services/indexedDBService'
@@ -27,7 +28,7 @@ interface ReviewState {
   loadSession: (slug: string, cards: FlashCard[], mode?: SessionMode) => void
   flip: () => void
   rate: (rating: Rating) => void
-  advanceExploration: (conceptId: string) => void
+  advanceExploration: (conceptId: string, result?: ExplorationResult) => void
   getCurrentCard: () => FlashCard | null
   getDueCards: (cards: FlashCard[]) => FlashCard[]
   reset: () => void
@@ -120,7 +121,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       }
 
       const cappedNew = newCards.slice(0, NEW_CARD_CAP)
-      queue = [...explorationItems, ...dueCards, ...cappedNew]
+      const rawQueue = [...explorationItems, ...dueCards, ...cappedNew]
+      queue = interleaveByTier(rawQueue)
     }
 
     set({
@@ -136,9 +138,19 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     })
   },
 
-  advanceExploration: (conceptId: string) => {
+  advanceExploration: (conceptId: string, result?: ExplorationResult) => {
     const { allCards, queue, currentIndex } = get()
     srStateService.markExplored(conceptId)
+
+    // 16.5 — Record exploration result (confidence + first-attempt)
+    if (result) {
+      progressStore.recordExplorationResult({
+        conceptId: result.conceptId,
+        completedAt: new Date().toISOString(),
+        confidenceRating: result.confidenceRating,
+        firstAttemptCorrect: result.firstAttemptCorrect,
+      })
+    }
 
     const srState = srStateService.getSRState()
     const now = new Date()
