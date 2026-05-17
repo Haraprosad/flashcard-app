@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { MarkdownText } from './MarkdownText'
 
 interface IntuitionCardProps {
   front: string
@@ -69,7 +70,7 @@ function IntuitionFront({ text }: { text: string }) {
             fontStyle: 'italic',
           }}
         >
-          {withoutPrefix}
+          <MarkdownText text={withoutPrefix} />
         </p>
       </div>
     )
@@ -89,7 +90,7 @@ function IntuitionFront({ text }: { text: string }) {
         fontStyle: 'italic',
       }}
     >
-      {text}
+      <MarkdownText text={text} />
     </p>
   )
 }
@@ -103,10 +104,9 @@ function IntuitionBack({ text }: { text: string }) {
         color: 'var(--text-primary)',
         lineHeight: 1.6,
         margin: 0,
-        whiteSpace: 'pre-wrap',
       }}
     >
-      {text}
+      <MarkdownText text={text} />
     </p>
   )
 }

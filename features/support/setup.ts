@@ -2,6 +2,9 @@ import { Before, After } from '@cucumber/cucumber'
 import { GlobalWindow } from 'happy-dom'
 import React from 'react'
 import { useAuthStore } from '../../src/stores/authStore'
+import { srStateService } from '../../src/services/srStateService'
+import { progressStore } from '../../src/stores/progressStore'
+import { indexedDBService } from '../../src/services/indexedDBService'
 
 // Suppress act() warnings from @react-oauth/google internals in test env
 const origError = console.error
@@ -66,7 +69,27 @@ setupDOM()
 // ─── Per-scenario reset ────────────────────────────────────────────────────
 
 Before(function () {
-  useAuthStore.setState({ accessToken: null, userEmail: null })
+  useAuthStore.setState({ accessToken: null, userEmail: null, isSyncing: false })
+
+  // Reset in-memory caches so each scenario starts clean
+  srStateService._resetForTests()
+  progressStore._resetForTests()
+
+  // Stub all IDB operations to no-ops so tests don't need real IDB
+  indexedDBService.putSRStateEntry = async () => {}
+  indexedDBService.getAllSRState = async () => ({})
+  indexedDBService.clearSRState = async () => {}
+  indexedDBService.getExploredConcepts = async () => []
+  indexedDBService.saveExploredConcepts = async () => {}
+  indexedDBService.getMetaValue = async () => null
+  indexedDBService.setMetaValue = async () => {}
+  indexedDBService.deleteMetaValue = async () => {}
+  indexedDBService.getAllReviewLog = async () => ({})
+  indexedDBService.putReviewLogEntry = async () => {}
+  indexedDBService.clearReviewLog = async () => {}
+  indexedDBService.getStreakData = async () => null
+  indexedDBService.saveStreakData = async () => {}
+  indexedDBService.resetAllSRData = async () => {}
 })
 
 After(function () {

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { MarkdownText } from './MarkdownText'
 
 interface ClozeCardProps {
   front: string
@@ -67,7 +68,7 @@ function ClozeFront({ text }: { text: string }) {
     >
       {parts.map((part, i) => (
         <span key={i}>
-          {part}
+          <MarkdownText text={part} />
           {i < parts.length - 1 && (
             <motion.span
               style={blankStyle}
@@ -86,9 +87,8 @@ function ClozeFront({ text }: { text: string }) {
 }
 
 function ClozeBack({ text }: { text: string }) {
-  // Parse bold segments (**text**) from the back for amber highlighting
-  const segments = text.split(/(\*\*[^*]+\*\*)/g)
-
+  // MarkdownText with boldColor renders **revealed text** in amber,
+  // and also handles *italic* and `code` inside the back text.
   return (
     <p
       style={{
@@ -97,25 +97,9 @@ function ClozeBack({ text }: { text: string }) {
         color: 'var(--text-primary)',
         lineHeight: 1.6,
         margin: 0,
-        whiteSpace: 'pre-wrap',
       }}
     >
-      {segments.map((seg, i) => {
-        if (seg.startsWith('**') && seg.endsWith('**')) {
-          return (
-            <motion.span
-              key={i}
-              initial={{ color: 'var(--accent)', scale: 1.05 }}
-              animate={{ color: 'var(--accent)', scale: 1 }}
-              transition={{ duration: 0.3 }}
-              style={{ color: 'var(--accent)', fontWeight: 600 }}
-            >
-              {seg.slice(2, -2)}
-            </motion.span>
-          )
-        }
-        return <span key={i}>{seg}</span>
-      })}
+      <MarkdownText text={text} boldColor="var(--accent)" />
     </p>
   )
 }

@@ -2,6 +2,7 @@ import { Given, Then, Before, After } from '@cucumber/cucumber'
 import { useAuthStore } from '../../src/stores/authStore'
 import { useTopicStore } from '../../src/stores/topicStore'
 import { useReviewStore } from '../../src/stores/reviewStore'
+import { srStateService } from '../../src/services/srStateService'
 import type { FlashCard, CardSRData, TopicFile } from '../../src/types'
 
 function makeCard(overrides: Partial<FlashCard> = {}): FlashCard {
@@ -42,7 +43,7 @@ After(function () {
   useAuthStore.setState({ accessToken: null, userEmail: null })
   useTopicStore.setState({ topics: {}, loading: {}, error: {}, sessionFetchedAt: {} })
   useReviewStore.getState().reset()
-  localStorage.removeItem('sr_state')
+  srStateService._resetForTests()
 })
 
 // ─── Given ──────────────────────────────────────────────────────────────────
@@ -89,89 +90,70 @@ Given('a concept {string} has T1, T2, and T3 cards', function (conceptId: string
 })
 
 Given('the T1 card has never been reviewed', function () {
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
-    // No SR entry = never reviewed
     if (card.tier !== 1) {
-      srState[card.id] = makeDueSRData()
+      srStateService.updateCard(card.id, makeDueSRData())
     }
+    // T1 cards get no entry = never reviewed
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the T1 card has been rated Good', function () {
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
     if (card.tier === 1) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
+      srStateService.updateCard(card.id, makeDueSRData({ reps: 2, lapses: 0, state: 2 }))
     }
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the T2 card has never been reviewed', function () {
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
     if (card.tier === 1) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
+      srStateService.updateCard(card.id, makeDueSRData({ reps: 2, lapses: 0, state: 2 }))
     }
     // T2 and T3 have no SR entry = never reviewed
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the T2 card has been rated Good', function () {
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
-    if (card.tier === 1) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
-    }
-    if (card.tier === 2) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
+    if (card.tier === 1 || card.tier === 2) {
+      srStateService.updateCard(card.id, makeDueSRData({ reps: 2, lapses: 0, state: 2 }))
     }
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the T3 card has never been reviewed', function () {
-  // T3 has no SR entry — already handled by not setting it
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
-    if (card.tier === 1) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
-    }
-    if (card.tier === 2) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 0, state: 2 })
+    if (card.tier === 1 || card.tier === 2) {
+      srStateService.updateCard(card.id, makeDueSRData({ reps: 2, lapses: 0, state: 2 }))
     }
     // T3 intentionally left out
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the T1 card has been rated Again \\(lapses >= reps\\)', function () {
-  const srState: Record<string, CardSRData> = {}
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   for (const card of allCards) {
     if (card.tier === 1) {
-      srState[card.id] = makeDueSRData({ reps: 2, lapses: 2, state: 1 })
+      srStateService.updateCard(card.id, makeDueSRData({ reps: 2, lapses: 2, state: 1 }))
     }
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('no cards have been reviewed', function () {
-  localStorage.removeItem('sr_state')
+  srStateService._resetForTests()
 })
 
 Given('the topic has {int} cards without concept_id at tiers {int}, {int}, and {int}', function (
@@ -201,11 +183,9 @@ Given('the topic has {int} cards without concept_id at tiers {int}, {int}, and {
     sessionFetchedAt: {},
   })
 
-  const srState: Record<string, CardSRData> = {}
   for (const card of cards) {
-    srState[card.id] = makeDueSRData()
+    srStateService.updateCard(card.id, makeDueSRData())
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 // ─── Then ───────────────────────────────────────────────────────────────────

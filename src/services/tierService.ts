@@ -1,4 +1,5 @@
 import type { FlashCard, SRState } from '../types'
+import { srStateService } from './srStateService'
 
 interface ConceptProgress {
   t1Done: boolean
@@ -10,11 +11,11 @@ interface ConceptProgress {
  *
  * Rules:
  * - Cards without a concept_id are always eligible (no gating).
- * - T1 cards are always eligible.
- * - T2 cards require the T1 card in the same concept group to have been
- *   rated "Good" or "Easy" at least once (reps >= 1 AND last rating not "Again").
- * - T3 cards require the T2 card in the same concept group to have been
- *   rated "Good" or "Easy" at least once.
+ * - If the concept has an unexplored exploration card → ALL tiers are gated.
+ * - T1 cards are always eligible once exploration is cleared.
+ * - T2 cards require T1 rated Good/Easy at least once.
+ * - T3 cards require T2 rated Good/Easy at least once.
+ * - Exploration cards themselves are never returned (handled separately).
  */
 export function getTierEligibleCards(
   cards: FlashCard[],
@@ -25,6 +26,7 @@ export function getTierEligibleCards(
   const ungrouped: FlashCard[] = []
 
   for (const card of cards) {
+    if (card.type === 'exploration') continue // handled separately by session
     if (!card.concept_id) {
       ungrouped.push(card)
     } else {
@@ -36,7 +38,16 @@ export function getTierEligibleCards(
 
   const eligible: FlashCard[] = [...ungrouped]
 
-  for (const [, group] of conceptGroups) {
+  for (const [conceptId, group] of conceptGroups) {
+    // If there's an exploration card for this concept that hasn't been explored yet,
+    // gate all tiers until the user completes it.
+    const hasExploration = cards.some(
+      (c) => c.type === 'exploration' && c.concept_id === conceptId,
+    )
+    if (hasExploration && !srStateService.isExplored(conceptId)) {
+      continue // all tiers blocked until exploration is done
+    }
+
     const progress = getConceptProgress(group, srState)
 
     for (const card of group) {
@@ -51,6 +62,16 @@ export function getTierEligibleCards(
   }
 
   return eligible
+}
+
+/**
+ * Returns the exploration card for a concept if one exists.
+ */
+export function getConceptExplorationCard(
+  conceptId: string,
+  cards: FlashCard[],
+): FlashCard | undefined {
+  return cards.find((c) => c.type === 'exploration' && c.concept_id === conceptId)
 }
 
 /**

@@ -7,6 +7,7 @@ import { useAuthStore } from '../../src/stores/authStore'
 import { useTopicStore } from '../../src/stores/topicStore'
 import { useReviewStore } from '../../src/stores/reviewStore'
 import { indexedDBService } from '../../src/services/indexedDBService'
+import { srStateService } from '../../src/services/srStateService'
 import { ReviewSessionPage } from '../../src/pages/ReviewSessionPage'
 import type { FlashCard, CardSRData, TopicFile } from '../../src/types'
 
@@ -63,7 +64,7 @@ After(function () {
   useAuthStore.setState({ accessToken: null, userEmail: null })
   useTopicStore.setState({ topics: {}, loading: {}, error: {}, sessionFetchedAt: {} })
   useReviewStore.getState().reset()
-  localStorage.removeItem('sr_state')
+  srStateService._resetForTests()
 })
 
 // ─── Given ──────────────────────────────────────────────────────────────────
@@ -82,9 +83,8 @@ Given('{int} of those cards are due today', function (count: number) {
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
   const now = new Date().toISOString()
-  const srState: Record<string, CardSRData> = {}
   for (let i = 0; i < Math.min(count, allCards.length); i++) {
-    srState[allCards[i].id] = {
+    srStateService.updateCard(allCards[i].id, {
       due: now,
       stability: 5,
       difficulty: 5,
@@ -94,11 +94,11 @@ Given('{int} of those cards are due today', function (count: number) {
       lapses: 0,
       state: 2,
       last_review: new Date(Date.now() - 86400000).toISOString(),
-    }
+    })
   }
   // Remaining cards get future due (not due today)
   for (let i = count; i < allCards.length; i++) {
-    srState[allCards[i].id] = {
+    srStateService.updateCard(allCards[i].id, {
       due: new Date(Date.now() + 7 * 86400000).toISOString(),
       stability: 5,
       difficulty: 5,
@@ -108,28 +108,21 @@ Given('{int} of those cards are due today', function (count: number) {
       lapses: 0,
       state: 2,
       last_review: now,
-    }
+    })
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('{int} cards have never been reviewed \\(state=New)', function (count: number) {
-  // Cards with no SR state are treated as New. Clear SR state for first `count` cards.
+  // Remove SR state for the first `count` cards so they appear as New
   const topics = useTopicStore.getState().topics
   const allCards = Object.values(topics).flatMap((t) => t.cards)
-  const raw = localStorage.getItem('sr_state')
-  const srState: Record<string, CardSRData> = raw ? JSON.parse(raw) : {}
-  // Remove SR state for `count` cards so they appear as new
   for (let i = 0; i < Math.min(count, allCards.length); i++) {
-    delete srState[allCards[i].id]
+    srStateService._deleteCardForTests(allCards[i].id)
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('{int} cards have never been reviewed', function (count: number) {
-  // Clear all SR state — all cards become new
-  localStorage.removeItem('sr_state')
-  // Create a topic with `count` cards (all new)
+  // No SR state needed — cards without entries are treated as New
   const slug = 'kubernetes'
   const topic = makeTopic(slug, count)
   useTopicStore.setState({
@@ -151,9 +144,8 @@ Given('the review session is loaded with {int} due card(s)', async function (cou
   })
 
   const now = new Date().toISOString()
-  const srState: Record<string, CardSRData> = {}
   for (const card of topic.cards) {
-    srState[card.id] = {
+    srStateService.updateCard(card.id, {
       due: now,
       stability: 5,
       difficulty: 5,
@@ -163,9 +155,8 @@ Given('the review session is loaded with {int} due card(s)', async function (cou
       lapses: 0,
       state: 2,
       last_review: new Date(Date.now() - 86400000).toISOString(),
-    }
+    })
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 
   renderReviewPage(slug)
   await waitFor(
@@ -276,7 +267,7 @@ Then('the first card is shown face-down \\(front only)', async function () {
 
 Then('those {int} new cards are included in the queue', function (count: number) {
   const { queue } = useReviewStore.getState()
-  const srState = JSON.parse(localStorage.getItem('sr_state') ?? '{}') as Record<string, CardSRData>
+  const srState = srStateService.getSRState()
   const newInQueue = queue.filter((c) => !srState[c.id])
   if (newInQueue.length < count) {
     throw new Error(`Expected at least ${count} new cards in queue, found ${newInQueue.length}`)
@@ -285,7 +276,7 @@ Then('those {int} new cards are included in the queue', function (count: number)
 
 Then('only {int} new cards are in the session queue', function (max: number) {
   const { queue } = useReviewStore.getState()
-  const srState = JSON.parse(localStorage.getItem('sr_state') ?? '{}') as Record<string, CardSRData>
+  const srState = srStateService.getSRState()
   const newInQueue = queue.filter((c) => !srState[c.id])
   if (newInQueue.length > max) {
     throw new Error(`Expected at most ${max} new cards, found ${newInQueue.length}`)
@@ -318,10 +309,8 @@ Then('the RatingBar appears with {int} buttons', async function (_count: number)
 })
 
 Then('the SR state for that card is updated in localStorage', function () {
-  const raw = localStorage.getItem('sr_state')
-  if (!raw) throw new Error('sr_state not found in localStorage')
-  const state = JSON.parse(raw) as Record<string, CardSRData>
-  if (Object.keys(state).length === 0) throw new Error('sr_state is empty')
+  const state = srStateService.getSRState()
+  if (Object.keys(state).length === 0) throw new Error('SR state is empty after rating')
 })
 
 Then('the next card is shown', async function () {
@@ -373,12 +362,7 @@ Then('it displays the count of cards reviewed', function () {
 
 Then('the card is rated {string}', async function (rating: string) {
   await waitFor(() => {
-    const raw = localStorage.getItem('sr_state')
-    if (!raw) throw new Error('sr_state not found after rating')
-    const state = JSON.parse(raw) as Record<string, CardSRData>
-    if (Object.keys(state).length === 0) throw new Error('sr_state empty after rating')
+    const { reviewedCount } = useReviewStore.getState()
+    if (reviewedCount < 1) throw new Error(`Expected reviewedCount >= 1 after rating ${rating}`)
   }, { timeout: 3000 })
-  // The rating was applied — verify the card state changed
-  const { reviewedCount } = useReviewStore.getState()
-  if (reviewedCount < 1) throw new Error(`Expected reviewedCount >= 1 after rating ${rating}`)
 })

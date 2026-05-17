@@ -18,12 +18,23 @@ const FlashcardsIndexSchema = z.object({
   topics: z.array(TopicMetaSchema),
 })
 
+const ExplorationStepSchema = z.object({
+  kind: z.enum(['scenario', 'problem', 'guide', 'challenge']),
+  title: z.string(),
+  body: z.string(),
+  challenge_options: z.array(z.string()).optional(),
+  challenge_answer: z.number().int().nonnegative().optional(),
+  challenge_input: z.boolean().optional(),
+  challenge_explanation: z.string().optional(),
+})
+
 const FlashCardSchema = z.object({
   id: z.string().min(1),
-  type: z.enum(['standard', 'cloze', 'intuition']).default('standard'),
+  type: z.enum(['standard', 'cloze', 'intuition', 'exploration']).default('standard'),
   tier: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
   front: z.string(),
   back: z.string(),
+  steps: z.array(ExplorationStepSchema).optional(),
   topic: z.string(),
   tags: z.array(z.string()),
   source_file: z.string(),

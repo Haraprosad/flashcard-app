@@ -9,6 +9,7 @@ import { useTopicStore } from '../../src/stores/topicStore'
 import { useReviewStore } from '../../src/stores/reviewStore'
 import { indexedDBService } from '../../src/services/indexedDBService'
 import { gdriveService } from '../../src/services/gdriveService'
+import { srStateService } from '../../src/services/srStateService'
 import { TopicBrowserPage } from '../../src/pages/TopicBrowserPage'
 import { ReviewSessionPage } from '../../src/pages/ReviewSessionPage'
 import { TopicDetailPage } from '../../src/pages/TopicDetailPage'
@@ -178,7 +179,7 @@ Given('IndexedDB contains the {word} topic cards', function (slug: string) {
 })
 
 Given('SR state is in localStorage', function () {
-  localStorage.setItem('sr_state', JSON.stringify({}))
+  // SR state is now in the in-memory cache — nothing to set up for an empty state
 })
 
 Given(/^the device (?:goes |is )offline$/, function () {
@@ -255,10 +256,8 @@ Then('the review session starts normally', function () {
 Then('rating cards works and persists to localStorage', function () {
   act(() => { useReviewStore.getState().flip() })
   act(() => { useReviewStore.getState().rate('Good') })
-  const srState = localStorage.getItem('sr_state')
-  if (!srState) throw new Error('sr_state not found in localStorage after rating')
-  const parsed = JSON.parse(srState) as Record<string, unknown>
-  if (Object.keys(parsed).length === 0) throw new Error('sr_state is empty after rating')
+  const srState = srStateService.getSRState()
+  if (Object.keys(srState).length === 0) throw new Error('sr_state is empty after rating')
 })
 
 Then('the OfflineBanner is visible', async function () {

@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion'
 import type { FlashCard } from '../types'
 import { ClozeCard } from './ClozeCard'
 import { IntuitionCard } from './IntuitionCard'
+import { MarkdownText } from './MarkdownText'
 
 interface FlashCardProps {
   card: FlashCard
@@ -164,7 +165,7 @@ export function FlashCardComponent({
               margin: 0,
             }}
           >
-            {card.front}
+            <MarkdownText text={card.front} />
           </p>
         )}
         <span
@@ -206,10 +207,9 @@ export function FlashCardComponent({
               lineHeight: 1.6,
               margin: 0,
               width: '100%',
-              whiteSpace: 'pre-wrap',
             }}
           >
-            {card.back}
+            <MarkdownText text={card.back} />
           </p>
         )}
         <span

@@ -15,13 +15,11 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 
 ## Phase
 
-**Current:** 9 — Navigation & App Shell
+**Current:** Phase 15 ✅ COMPLETE — Battle-Proof SR State Persistence (IndexedDB + Drive Backup)
 
-**Focus:** BottomNav, Toaster, AppLayout with AnimatePresence page transitions
+**Updated:** 2026-05-17
 
-**Updated:** 2026-05-16
-
-**Last session:** Phase 9 complete. toastStore (Zustand, addToast/removeToast). Toaster component (Framer Motion slide-in from right, auto-dismiss 3s, popLayout AnimatePresence). BottomNav (3 tabs, amber indicator with layoutId shared layout, safe-area-inset-bottom, aria-current). Router refactored: AppLayout nested route wraps /topics, /topics/:slug, /progress, /settings with BottomNav + Toaster + AnimatePresence mode="wait" exit transitions. Review session stays full-screen. tsc clean, 53 BDD scenarios GREEN (266 steps).
+**Last session:** Completed Phase 15 in full. indexedDBService v2 (sr_state + review_log IDB stores, localStorage→IDB migration on first open). srStateService: in-memory cache backed by IDB (sync reads, async writes), init() for app startup, _resetForTests/_deleteCardForTests/_setSRStateForTests for testing. progressStore: same pattern for streak_data + review_log, _setStreakDataForTests/_setReviewLogForTests helpers. srStateDriveService: fetch/push/merge for sr_state.json (Drive multipart upload, Zod validation, highest-reps merge, offline pending flag). authStore: signInAndSync does Drive merge on login, isSyncing state. GoogleSignInButton: scope upgraded to drive.file + drive.readonly, calls signInAndSync. reviewStore: post-session Drive push (fire-and-forget), driveSyncStatus state. SessionComplete: drive sync badge (syncing/synced/failed). SettingsPage: Backup & Sync section (sync now, restore from Drive, export JSON). App.tsx: init() called on mount. All 87/87 BDD GREEN, tsc clean.
 
 ---
 
@@ -38,16 +36,19 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 - [x] Phase 7: Offline Support — useOfflineStatus hook, OfflineBanner (slide-down, dismissible, last_synced_at), gdriveService IDB fallback + TypeError skip-retry + "This topic hasn't been downloaded yet" error, indexStore saves last_synced_at, TopicBrowserPage uses OfflineBanner, TopicDetailPage offline errors. 53 BDD scenarios GREEN (266 steps).
 - [x] Phase 8: Settings Page — SettingsPage (SyncSection, CacheSection, ResetSection/danger zone), ConfirmDialog (type-to-confirm, scale-in animation), /settings route. tsc clean, 53 BDD scenarios GREEN.
 - [x] Phase 9: Navigation & App Shell — toastStore, Toaster (slide-in from right, auto-dismiss 3s), BottomNav (3 tabs, amber layoutId indicator, safe-area-inset-bottom, aria-current), AppLayout nested route in router (wraps /topics /progress /settings with AnimatePresence mode="wait" + BottomNav + Toaster). Review session stays full-screen. tsc clean, 53 BDD scenarios GREEN (266 steps).
+- [x] Phase 13: Enhanced Card Types — CardType ('standard'|'cloze'|'intuition'), CardTier (1|2|3), concept_id. ClozeCard (blanks+revealed highlight), IntuitionCard (italic DM Serif, amber "Imagine:" prefix), FlashCard dispatches by type with tier badge (T1=green, T2=amber, T3=blue). tierService (getTierEligibleCards gating T1→T2→T3). 66/66 BDD GREEN.
+- [x] Phase 14: Exploration Cards — ExplorationStep type + 'exploration' CardType. srStateService exploration methods. tierService exploration gating. ExplorationCard 4-step stepper component (scenario/problem/guide/challenge, step dots, MC+free-text challenge). reviewStore prepends unexplored exploration cards, advanceExploration unlocks T1 cards. ReviewSessionPage renders full-screen exploration mode. 79/79 BDD GREEN.
+- [x] Phase 15: Battle-Proof SR State Persistence — indexedDBService v2 (sr_state + review_log stores + localStorage migration). srStateService in-memory cache backed by IDB. progressStore same pattern. srStateDriveService (fetch/push/merge, offline pending flag). authStore signInAndSync with Drive merge on login. reviewStore post-session Drive push + driveSyncStatus. SessionComplete sync badge. SettingsPage Backup & Sync section. 87/87 BDD GREEN, tsc clean.
 
 ## In Progress
 
-- [ ] Nothing yet
+None.
 
 ## Next 3
 
-1. Phase 10: Skeleton loading states for data-fetching components
-2. Phase 10: `prefers-reduced-motion` media query — disable all animations
-3. Phase 11: Unit tests — fsrsService, srStateService, progressStore
+1. Phase 11: Run full BDD suite + unit tests + E2E tests
+2. Phase 12: Deploy to Netlify (Google Cloud Console OAuth setup + env vars)
+3. Phase 13.8 / 14.8: Visual polish (intuition card gradient, guide step JetBrains Mono)
 
 ---
 
@@ -69,6 +70,12 @@ Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 | Test isolation | Call `cleanup()` from `@testing-library/react` in `After` hook **before** resetting Zustand stores — prevents stale mounted components from firing async effects into the next scenario's state |
 | sessionFetchedAt | `topicStore` tracks in-memory fetch timestamps; fast-path skips IDB+Drive when `sessionTs >= meta.generated_at` |
 | Folder ID cache | `gdriveService` caches Drive folder IDs in IDB via `getFolderIds/saveFolderIds` — mock both in every BDD `Before` hook |
+| Exploration cards | No FSRS scheduling — shown once per concept_id, gate stored in `explored_concepts` IDB metadata key via `srStateService`. Exploration completion unlocks T1 gating for that concept. |
+| Exploration format | Sync script uses `===STEP: kind===` delimiters; challenge options use `- [ ]` / `- [x]` syntax. One exploration card per concept, grouped by `concept_id`. |
+| SR state storage | Primary: IndexedDB `sr_state` store (not localStorage — too fragile). Backup: Drive `sr_state.json`. Merge on login: highest `reps` wins; tie-break by most recent `last_review`. |
+| Drive scope | `drive.file` (not `drive.readonly`) — needed to write `sr_state.json`. Scope is narrow: only files the app created. |
+| SRStateFile | Drive backup bundles sr_state + explored_concepts + review_log + streak_data in one JSON. Prevents partial restore. |
+| Obsidian SR compat | SM-2 plugin (obsidian-spaced-repetition) — import-only, not ongoing sync. FSRS plugin (obsidian-recall) — full two-way bridge possible via sync script writing frontmatter. |
 
 ---
 

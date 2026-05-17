@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { indexedDBService } from '../services/indexedDBService'
 import { srStateService } from '../services/srStateService'
+import { progressStore } from '../stores/progressStore'
+import { srStateDriveService } from '../services/srStateDriveService'
 import { useTopicStore } from '../stores/topicStore'
 import { useIndexStore } from '../stores/indexStore'
 import { useAuthStore } from '../stores/authStore'
@@ -164,11 +166,16 @@ export function SettingsPage() {
   const [cacheLoading, setCacheLoading] = useState(false)
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [srSyncedAt, setSrSyncedAt] = useState<string | null>(null)
+  const [driveBackupLoading, setDriveBackupLoading] = useState(false)
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
 
   const loadStats = useCallback(async () => {
     setLastSyncedAt(localStorage.getItem('last_synced_at'))
     const stats = await indexedDBService.getCachedTopicStats()
     setCacheStats(stats)
+    const synced = await indexedDBService.getMetaValue<string>('sr_state_synced_at')
+    setSrSyncedAt(synced)
   }, [])
 
   useEffect(() => {
@@ -189,6 +196,20 @@ export function SettingsPage() {
       // Clear IDB cache so the app re-fetches the freshly written JSON
       await indexedDBService.clearTopicCache()
       useTopicStore.setState({ topics: {}, sessionFetchedAt: {} })
+      // Reset explored concepts so exploration cards re-appear after a vault sync.
+      // The vault sync re-generates all cards from source notes, so concept content
+      // may have changed — users should be able to explore them again.
+      srStateService.resetExploredConcepts()
+      // Push cleared state to Drive so other devices also see exploration cards again
+      try {
+        const srState = srStateService.getSRState()
+        const reviewLog = await indexedDBService.getAllReviewLog()
+        const streak = progressStore.getStreakData()
+        const payload = await srStateDriveService.buildPayload(srState, [], reviewLog, streak)
+        void srStateDriveService.pushSRState(accessToken, payload)
+      } catch {
+        // Non-fatal — local reset is already done
+      }
       // Re-fetch index so Topics page updates immediately
       void fetchIndexFromDrive(accessToken)
       localStorage.setItem('last_synced_at', new Date().toISOString())
@@ -227,10 +248,66 @@ export function SettingsPage() {
     }
   }
 
-  function handleResetSRState() {
-    srStateService.resetAllState()
+  async function handleResetSRState() {
+    await srStateService.resetAllState()
     setResetDialogOpen(false)
     showSuccess('All SR state has been reset')
+  }
+
+  async function handleDriveSyncNow() {
+    if (!accessToken) return
+    setDriveBackupLoading(true)
+    try {
+      const srState = srStateService.getSRState()
+      const explored = srStateService.getExploredConceptIds()
+      const reviewLog = await indexedDBService.getAllReviewLog()
+      const streak = progressStore.getStreakData()
+      const payload = await srStateDriveService.buildPayload(srState, explored, reviewLog, streak)
+      await srStateDriveService.pushSRState(accessToken, payload)
+      const synced = await indexedDBService.getMetaValue<string>('sr_state_synced_at')
+      setSrSyncedAt(synced)
+      showSuccess('Progress synced to Drive')
+    } catch {
+      showSuccess('Sync failed — check your connection')
+    } finally {
+      setDriveBackupLoading(false)
+    }
+  }
+
+  async function handleRestoreFromDrive() {
+    if (!accessToken) return
+    setDriveBackupLoading(true)
+    try {
+      const remote = await srStateDriveService.fetchSRState(accessToken)
+      if (!remote) {
+        showSuccess('No Drive backup found')
+        return
+      }
+      await srStateService.bulkSetSRState(remote.sr_state)
+      await srStateService.bulkSetExplored(remote.explored_concepts)
+      await progressStore.bulkSetData(remote.streak_data, remote.review_log)
+      setRestoreDialogOpen(false)
+      showSuccess('Progress restored from Drive')
+    } catch {
+      showSuccess('Restore failed — check your connection')
+    } finally {
+      setDriveBackupLoading(false)
+    }
+  }
+
+  async function handleExportSRState() {
+    const srState = srStateService.getSRState()
+    const explored = srStateService.getExploredConceptIds()
+    const reviewLog = await indexedDBService.getAllReviewLog()
+    const streak = progressStore.getStreakData()
+    const payload = await srStateDriveService.buildPayload(srState, explored, reviewLog, streak)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'sr_state.json'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -321,6 +398,47 @@ export function SettingsPage() {
           )}
         </SectionCard>
 
+        {/* Backup & Sync Section */}
+        <SectionCard>
+          <SectionHeader label="Backup & Sync" />
+          <SettingsRow
+            label="Last synced to Drive"
+            sublabel={formatTimeAgo(srSyncedAt)}
+            action={
+              <ActionButton
+                testId="drive-sync-now-button"
+                label="Sync now"
+                onClick={() => void handleDriveSyncNow()}
+                loading={driveBackupLoading}
+                disabled={!accessToken}
+              />
+            }
+          />
+          <SettingsRow
+            label="Restore from Drive"
+            sublabel="Overwrite local progress with Drive backup"
+            action={
+              <ActionButton
+                testId="restore-from-drive-button"
+                label="Restore"
+                onClick={() => setRestoreDialogOpen(true)}
+                disabled={!accessToken || driveBackupLoading}
+              />
+            }
+          />
+          <SettingsRow
+            label="Export SR state"
+            sublabel="Download sr_state.json to your device"
+            action={
+              <ActionButton
+                testId="export-sr-state-button"
+                label="Export"
+                onClick={() => void handleExportSRState()}
+              />
+            }
+          />
+        </SectionCard>
+
         {/* Cache Section */}
         <SectionCard>
           <SectionHeader label="Cache" />
@@ -377,8 +495,17 @@ export function SettingsPage() {
         title="Reset all SR state?"
         description="This will permanently delete all review history, streak data, and scheduling progress. This cannot be undone."
         confirmText="RESET"
-        onConfirm={handleResetSRState}
+        onConfirm={() => void handleResetSRState()}
         onCancel={() => setResetDialogOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={restoreDialogOpen}
+        title="Restore from Drive?"
+        description="This will replace your local progress with the Drive backup. Your current local history will be lost."
+        confirmText="RESTORE"
+        onConfirm={() => void handleRestoreFromDrive()}
+        onCancel={() => setRestoreDialogOpen(false)}
       />
     </>
   )

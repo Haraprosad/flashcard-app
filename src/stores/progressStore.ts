@@ -1,8 +1,11 @@
 import type { StreakData, ReviewLogEntry, TopicStats, FlashCard } from '../types'
 import { srStateService } from '../services/srStateService'
+import { indexedDBService } from '../services/indexedDBService'
 
-const STREAK_KEY = 'streak_data'
-const REVIEW_LOG_KEY = 'review_log'
+// In-memory cache
+let _streakData: StreakData = { current: 0, longest: 0, last_review_date: null }
+let _reviewLog: Record<string, number> = {}
+let _initialized = false
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
@@ -10,34 +13,6 @@ function todayStr(): string {
 
 function dateStr(d: Date): string {
   return d.toISOString().slice(0, 10)
-}
-
-function readStreakData(): StreakData {
-  try {
-    const raw = localStorage.getItem(STREAK_KEY)
-    if (!raw) return { current: 0, longest: 0, last_review_date: null }
-    return JSON.parse(raw) as StreakData
-  } catch {
-    return { current: 0, longest: 0, last_review_date: null }
-  }
-}
-
-function readReviewLog(): Record<string, number> {
-  try {
-    const raw = localStorage.getItem(REVIEW_LOG_KEY)
-    if (!raw) return {}
-    return JSON.parse(raw) as Record<string, number>
-  } catch {
-    return {}
-  }
-}
-
-function writeStreakData(data: StreakData): void {
-  localStorage.setItem(STREAK_KEY, JSON.stringify(data))
-}
-
-function writeReviewLog(log: Record<string, number>): void {
-  localStorage.setItem(REVIEW_LOG_KEY, JSON.stringify(log))
 }
 
 function isStreakBroken(lastDate: string): boolean {
@@ -56,42 +31,52 @@ export function getHeatmapLevel(count: number): number {
 }
 
 export const progressStore = {
+  async init(): Promise<void> {
+    if (_initialized) return
+    const [streak, log] = await Promise.all([
+      indexedDBService.getStreakData(),
+      indexedDBService.getAllReviewLog(),
+    ])
+    _streakData = streak ?? { current: 0, longest: 0, last_review_date: null }
+    _reviewLog = log
+    _initialized = true
+  },
+
   recordReview(_cardId: string, _rating: string): void {
     const today = todayStr()
 
-    const log = readReviewLog()
-    log[today] = (log[today] ?? 0) + 1
-    writeReviewLog(log)
+    _reviewLog[today] = (_reviewLog[today] ?? 0) + 1
+    void indexedDBService.putReviewLogEntry(today, _reviewLog[today])
 
-    const streak = readStreakData()
-    if (streak.last_review_date === today) return
+    if (_streakData.last_review_date === today) return
 
-    const broken = streak.last_review_date ? isStreakBroken(streak.last_review_date) : false
-    const newCurrent = broken ? 1 : streak.current + 1
+    const broken = _streakData.last_review_date
+      ? isStreakBroken(_streakData.last_review_date)
+      : false
+    const newCurrent = broken ? 1 : _streakData.current + 1
 
-    writeStreakData({
+    _streakData = {
       current: newCurrent,
-      longest: Math.max(streak.longest, newCurrent),
+      longest: Math.max(_streakData.longest, newCurrent),
       last_review_date: today,
-    })
+    }
+    void indexedDBService.saveStreakData(_streakData)
   },
 
   getStreakData(): StreakData {
-    const streak = readStreakData()
-    if (streak.last_review_date && isStreakBroken(streak.last_review_date)) {
-      return { current: 0, longest: streak.longest, last_review_date: streak.last_review_date }
+    if (_streakData.last_review_date && isStreakBroken(_streakData.last_review_date)) {
+      return { current: 0, longest: _streakData.longest, last_review_date: _streakData.last_review_date }
     }
-    return streak
+    return _streakData
   },
 
   getHeatmapData(): ReviewLogEntry[] {
-    const log = readReviewLog()
     const entries: ReviewLogEntry[] = []
     for (let i = 89; i >= 0; i--) {
       const d = new Date()
       d.setDate(d.getDate() - i)
       const ds = dateStr(d)
-      entries.push({ date: ds, count: log[ds] ?? 0 })
+      entries.push({ date: ds, count: _reviewLog[ds] ?? 0 })
     }
     return entries
   },
@@ -124,7 +109,39 @@ export const progressStore = {
   },
 
   getTotalReviews(): number {
-    const log = readReviewLog()
-    return Object.values(log).reduce((sum, c) => sum + c, 0)
+    return Object.values(_reviewLog).reduce((sum, c) => sum + c, 0)
+  },
+
+  /**
+   * Overwrite in-memory caches from an externally merged state (after Drive merge).
+   */
+  async bulkSetData(
+    streak: StreakData,
+    reviewLog: Record<string, number>,
+  ): Promise<void> {
+    _streakData = { ...streak }
+    _reviewLog = { ...reviewLog }
+    await indexedDBService.saveStreakData(streak)
+    await indexedDBService.clearReviewLog()
+    for (const [date, count] of Object.entries(reviewLog)) {
+      await indexedDBService.putReviewLogEntry(date, count)
+    }
+  },
+
+  // Used for resetting the singleton in tests
+  _resetForTests(): void {
+    _streakData = { current: 0, longest: 0, last_review_date: null }
+    _reviewLog = {}
+    _initialized = false
+  },
+
+  _setStreakDataForTests(data: StreakData): void {
+    _streakData = { ...data }
+    _initialized = true
+  },
+
+  _setReviewLogForTests(log: Record<string, number>): void {
+    _reviewLog = { ...log }
+    _initialized = true
   },
 }

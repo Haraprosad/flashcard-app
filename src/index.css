@@ -60,3 +60,225 @@ body {
 #root {
   min-height: 100dvh;
 }
+
+/* ─── Obsidian inline tokens (used by MarkdownText) ─────────────────────── */
+
+.obs-hl {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 0 3px;
+  font-weight: 600;
+}
+
+.obs-wiki {
+  color: var(--accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  cursor: default;
+}
+
+/* ─── Obsidian block renderer (ObsidianMarkdown) ────────────────────────── */
+
+.obs-md {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(15px, 2.5vw, 17px);
+  line-height: 1.75;
+  color: var(--text-primary);
+  max-width: 65ch;
+}
+
+/* Paragraphs */
+.obs-md p { margin: 0 0 0.7em; }
+.obs-md p:last-child { margin-bottom: 0; }
+
+/* Headings */
+.obs-md h1,
+.obs-md h2,
+.obs-md h3 {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0.9em 0 0.35em;
+  line-height: 1.3;
+}
+.obs-md h4,
+.obs-md h5,
+.obs-md h6 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0.8em 0 0.3em;
+  line-height: 1.3;
+}
+.obs-md h1 { font-size: 1.4em; }
+.obs-md h2 { font-size: 1.2em; }
+.obs-md h3 { font-size: 1.05em; }
+.obs-md h4,
+.obs-md h5,
+.obs-md h6 { font-size: 0.95em; }
+
+/* Lists */
+.obs-md ul,
+.obs-md ol {
+  padding-left: 1.5em;
+  margin: 0.4em 0 0.7em;
+}
+.obs-md li { margin: 0.25em 0; }
+.obs-md li:last-child { margin-bottom: 0; }
+
+/* Task list items (GFM) */
+.obs-md .task-list-item {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-left: -1.5em;
+}
+.obs-md input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 3px;
+  background: transparent;
+  margin-top: 4px;
+  cursor: default;
+  position: relative;
+  flex-shrink: 0;
+}
+.obs-md input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.obs-md input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #000;
+}
+
+/* Inline code */
+.obs-md code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.82em;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+/* Code blocks */
+.obs-md pre {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--bg-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0.7em 0;
+}
+.obs-md pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: var(--text-primary);
+  font-size: 0.85em;
+  letter-spacing: 0;
+}
+
+/* Blockquote (non-callout) */
+.obs-md blockquote {
+  border-left: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  padding: 2px 0 2px 16px;
+  margin: 0.7em 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+.obs-md blockquote p { margin: 0; }
+
+/* Horizontal rule */
+.obs-md hr {
+  border: none;
+  border-top: 1px solid var(--bg-border);
+  margin: 1em 0;
+}
+
+/* Strong / Em inside .obs-md (marked emits bare <strong>/<em>) */
+.obs-md strong { font-weight: 700; }
+.obs-md em     { font-style: italic; }
+
+/* Inline obs-hl / obs-wiki also appear inside .obs-md block output */
+.obs-md .obs-hl {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 0 3px;
+  font-weight: 600;
+}
+.obs-md .obs-wiki {
+  color: var(--accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  cursor: default;
+}
+
+/* ── Callouts ──────────────────────────────────────────────────────────────── */
+
+.obs-callout {
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0.75em 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.obs-callout-warning,
+.obs-callout-caution {
+  border-color: color-mix(in srgb, var(--color-hard) 40%, transparent);
+  background:   color-mix(in srgb, var(--color-hard) 10%, transparent);
+}
+.obs-callout-danger,
+.obs-callout-failure {
+  border-color: color-mix(in srgb, var(--color-again) 40%, transparent);
+  background:   color-mix(in srgb, var(--color-again) 10%, transparent);
+}
+.obs-callout-success {
+  border-color: color-mix(in srgb, var(--color-good) 40%, transparent);
+  background:   color-mix(in srgb, var(--color-good) 10%, transparent);
+}
+.obs-callout-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.obs-callout-warning .obs-callout-title,
+.obs-callout-caution .obs-callout-title  { color: var(--color-hard);  }
+.obs-callout-danger .obs-callout-title,
+.obs-callout-failure .obs-callout-title  { color: var(--color-again); }
+.obs-callout-success .obs-callout-title  { color: var(--color-good);  }
+.obs-callout-body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.obs-callout-body p { margin: 0; }
+
+/* ── Explanation variant inside wrong-answer panel ─────────────────────────── */
+
+.obs-md--explanation {
+  font-size: 14px;
+  color: var(--color-again);
+  max-width: none;
+}
+.obs-md--explanation p { margin: 0; }

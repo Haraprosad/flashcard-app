@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useGoogleLogin } from '@react-oauth/google'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../stores/authStore'
 
 const GoogleIcon = () => (
   <svg
@@ -30,7 +30,7 @@ const GoogleIcon = () => (
 )
 
 export function GoogleSignInButton() {
-  const { signIn } = useAuth()
+  const signInAndSync = useAuthStore((s) => s.signInAndSync)
 
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -38,12 +38,12 @@ export function GoogleSignInButton() {
         const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }).then((res) => res.json() as Promise<{ email: string }>)
-        signIn(tokenResponse.access_token, userInfo.email)
+        void signInAndSync(tokenResponse.access_token, userInfo.email)
       } catch {
-        signIn(tokenResponse.access_token, '')
+        void signInAndSync(tokenResponse.access_token, '')
       }
     },
-    scope: 'https://www.googleapis.com/auth/drive email profile',
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly email profile',
   })
 
   return (

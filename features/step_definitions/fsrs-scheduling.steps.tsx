@@ -149,28 +149,23 @@ Then('the new stability is greater than {float}', function (threshold: number) {
 })
 
 Then('localStorage sr_state is updated synchronously', function () {
-  const raw = localStorage.getItem('sr_state')
-  if (!raw) throw new Error('sr_state not found in localStorage')
-  const state = JSON.parse(raw) as Record<string, unknown>
-  if (!state[(this.card as FlashCard).id]) {
-    throw new Error(`sr_state does not contain card id "${(this.card as FlashCard).id}"`)
+  const state = srStateService.getSRState()
+  const cardId = (this.card as FlashCard).id
+  if (!state[cardId]) {
+    throw new Error(`SR cache does not contain card id "${cardId}"`)
   }
 })
 
 Then('the SR state from localStorage is still present', function () {
-  const raw = localStorage.getItem('sr_state')
-  if (!raw) throw new Error('sr_state was lost from localStorage')
-  const state = JSON.parse(raw) as Record<string, unknown>
+  const state = srStateService.getSRState()
   if (Object.keys(state).length === 0) {
-    throw new Error('sr_state in localStorage is empty after store reset')
+    throw new Error('SR state cache is empty after store reset')
   }
 })
 
 Then('the SR state entry for {string} is preserved', function (cardId: string) {
-  const raw = localStorage.getItem('sr_state')
-  if (!raw) throw new Error('sr_state not found in localStorage')
-  const state = JSON.parse(raw) as Record<string, unknown>
+  const state = srStateService.getSRState()
   if (!state[cardId]) {
-    throw new Error(`SR state for card "${cardId}" was not found in localStorage`)
+    throw new Error(`SR state for card "${cardId}" was not found in cache`)
   }
 })

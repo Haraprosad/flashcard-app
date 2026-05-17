@@ -23,15 +23,27 @@ export interface TopicFile {
   cards: FlashCard[]
 }
 
-export type CardType = 'standard' | 'cloze' | 'intuition'
+export type CardType = 'standard' | 'cloze' | 'intuition' | 'exploration'
 export type CardTier = 1 | 2 | 3
+
+// One step in a 4-step exploration flow (scenario → problem → guide → challenge)
+export interface ExplorationStep {
+  kind: 'scenario' | 'problem' | 'guide' | 'challenge'
+  title: string
+  body: string
+  challenge_options?: string[]   // Multiple-choice answers for challenge step
+  challenge_answer?: number      // 0-based index into challenge_options
+  challenge_input?: boolean      // True = free-text input instead of multiple choice
+  challenge_explanation?: string // Shown after wrong answer before retry
+}
 
 export interface FlashCard {
   id: string             // Stable format: "{slug}-{basename}-{index}"
   type: CardType         // Card format. Defaults to 'standard' if absent (backward compat)
   tier: CardTier         // Progressive disclosure level. Defaults to 1 if absent
-  front: string          // Question / scenario / cloze template with {{cN::text}} markers
-  back: string           // Answer / explanation / revealed cloze text
+  front: string          // Question / scenario / cloze template. Empty string for 'exploration'.
+  back: string           // Answer / explanation / revealed cloze text. Empty for 'exploration'.
+  steps?: ExplorationStep[] // Only for type='exploration'. The 4-step walkthrough.
   topic: string
   tags: string[]
   source_file: string    // Original .md filename in vault

@@ -7,6 +7,7 @@ import { useAuthStore } from '../../src/stores/authStore'
 import { useIndexStore } from '../../src/stores/indexStore'
 import { useTopicStore } from '../../src/stores/topicStore'
 import { indexedDBService } from '../../src/services/indexedDBService'
+import { srStateService } from '../../src/services/srStateService'
 import { TopicBrowserPage } from '../../src/pages/TopicBrowserPage'
 import type { FlashcardsIndex, TopicMeta, TopicFile, FlashCard, CardSRData } from '../../src/types'
 
@@ -63,7 +64,7 @@ After(function () {
   useIndexStore.setState({ index: null, topics: [], loading: false, error: null, isOffline: false })
   useTopicStore.setState({ topics: {}, loading: {}, error: {}, sessionFetchedAt: {} })
   useAuthStore.setState({ accessToken: null, userEmail: null })
-  localStorage.removeItem('sr_state')
+  srStateService._resetForTests()
 })
 
 // ─── Given ──────────────────────────────────────────────────────────────────
@@ -96,12 +97,9 @@ Given('the SR state has {int} cards due today for topic {string}', function (cou
   if (!topicData) throw new Error(`Topic "${slug}" not found in store`)
 
   const now = new Date().toISOString()
-  const srState: Record<string, CardSRData> = {}
 
-  // Set first `count` cards as due now (state=Review, reps>=3)
   for (let i = 0; i < Math.min(count, topicData.cards.length); i++) {
-    const card = topicData.cards[i]
-    srState[card.id] = {
+    srStateService.updateCard(topicData.cards[i].id, {
       due: now,
       stability: 10,
       difficulty: 5,
@@ -111,13 +109,11 @@ Given('the SR state has {int} cards due today for topic {string}', function (cou
       lapses: 0,
       state: 2,
       last_review: new Date(Date.now() - 86400000).toISOString(),
-    }
+    })
   }
 
-  // Set remaining cards as not due (future due date)
   for (let i = count; i < topicData.cards.length; i++) {
-    const card = topicData.cards[i]
-    srState[card.id] = {
+    srStateService.updateCard(topicData.cards[i].id, {
       due: new Date(Date.now() + 7 * 86400000).toISOString(),
       stability: 10,
       difficulty: 5,
@@ -127,10 +123,8 @@ Given('the SR state has {int} cards due today for topic {string}', function (cou
       lapses: 0,
       state: 2,
       last_review: now,
-    }
+    })
   }
-
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('{int} of {int} kubernetes cards have state=Review and reps>=3', function (masteredCount: number, _totalCount: number) {
@@ -138,13 +132,11 @@ Given('{int} of {int} kubernetes cards have state=Review and reps>=3', function 
   if (!topicData) throw new Error('Topic "kubernetes" not found in store')
 
   const now = new Date().toISOString()
-  const srState: Record<string, CardSRData> = {}
 
   for (let i = 0; i < topicData.cards.length; i++) {
     const card = topicData.cards[i]
     if (i < masteredCount) {
-      // Mastered: state=Review, reps>=3
-      srState[card.id] = {
+      srStateService.updateCard(card.id, {
         due: new Date(Date.now() + 7 * 86400000).toISOString(),
         stability: 10,
         difficulty: 5,
@@ -154,10 +146,9 @@ Given('{int} of {int} kubernetes cards have state=Review and reps>=3', function 
         lapses: 0,
         state: 2,
         last_review: now,
-      }
+      })
     } else {
-      // New: state=New, reps=0
-      srState[card.id] = {
+      srStateService.updateCard(card.id, {
         due: now,
         stability: 0,
         difficulty: 5,
@@ -167,11 +158,9 @@ Given('{int} of {int} kubernetes cards have state=Review and reps>=3', function 
         lapses: 0,
         state: 0,
         last_review: '',
-      }
+      })
     }
   }
-
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Given('the topic browser is visible', async function () {
@@ -187,13 +176,11 @@ Given('the topic browser is visible', async function () {
 
 Given('multiple topics have due cards', function () {
   const now = new Date().toISOString()
-  const srState: Record<string, CardSRData> = {}
 
-  // Make kubernetes and python have due cards
   for (const slug of ['kubernetes', 'python']) {
     const topicData = useTopicStore.getState().topics[slug]
     if (topicData && topicData.cards.length > 0) {
-      srState[topicData.cards[0].id] = {
+      srStateService.updateCard(topicData.cards[0].id, {
         due: now,
         stability: 10,
         difficulty: 5,
@@ -203,11 +190,9 @@ Given('multiple topics have due cards', function () {
         lapses: 0,
         state: 2,
         last_review: new Date(Date.now() - 86400000).toISOString(),
-      }
+      })
     }
   }
-
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 // ─── When ───────────────────────────────────────────────────────────────────

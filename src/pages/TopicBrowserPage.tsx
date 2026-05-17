@@ -205,7 +205,7 @@ export function TopicBrowserPage() {
       {totalDue > 0 && (
         <motion.button
           type="button"
-          onClick={() => navigate('/review/all')}
+          onClick={() => navigate('/review/all?mode=review')}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           style={{

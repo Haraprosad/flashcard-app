@@ -1,15 +1,51 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useReviewStore } from '../stores/reviewStore'
 
 interface SessionCompleteProps {
   reviewedCount: number
   topicSlug: string | null
+  driveSyncStatus?: 'idle' | 'syncing' | 'synced' | 'failed'
 }
 
 const spring = { type: 'spring', stiffness: 300, damping: 28 }
 
-export function SessionComplete({ reviewedCount, topicSlug }: SessionCompleteProps) {
+function DriveSyncBadge({ status }: { status: 'idle' | 'syncing' | 'synced' | 'failed' }) {
+  if (status === 'idle') return null
+
+  const config = {
+    syncing: { text: 'Saving progress to Drive…', color: 'var(--text-secondary)' },
+    synced: { text: 'Progress saved to Drive ✓', color: 'var(--color-good)' },
+    failed: { text: 'Saved locally — will sync when online', color: 'var(--text-muted)' },
+  }[status]
+
+  return (
+    <motion.p
+      data-testid="drive-sync-badge"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      style={{
+        fontFamily: 'DM Sans, sans-serif',
+        fontSize: '13px',
+        color: config.color,
+        margin: 0,
+      }}
+    >
+      {config.text}
+    </motion.p>
+  )
+}
+
+export function SessionComplete({ reviewedCount, topicSlug, driveSyncStatus = 'idle' }: SessionCompleteProps) {
   const navigate = useNavigate()
+  const reset = useReviewStore((s) => s.reset)
+
+  function handleReviewAgain() {
+    if (!topicSlug) return
+    reset()
+    navigate(`/review/${topicSlug}`, { replace: true })
+  }
 
   return (
     <motion.div
@@ -68,6 +104,7 @@ export function SessionComplete({ reviewedCount, topicSlug }: SessionCompletePro
           </span>{' '}
           card{reviewedCount !== 1 ? 's' : ''}
         </p>
+        <DriveSyncBadge status={driveSyncStatus} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '320px' }}>
@@ -96,10 +133,7 @@ export function SessionComplete({ reviewedCount, topicSlug }: SessionCompletePro
         {topicSlug && (
           <motion.button
             type="button"
-            onClick={() => {
-              navigate(`/review/${topicSlug}`)
-              window.location.reload()
-            }}
+            onClick={handleReviewAgain}
             whileTap={{ scale: 0.97 }}
             transition={spring}
             aria-label="Start another review session"

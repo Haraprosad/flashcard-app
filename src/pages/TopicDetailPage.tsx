@@ -296,7 +296,7 @@ export function TopicDetailPage() {
 
   const reviewButtonLabel = stats?.dueToday
     ? `Review ${stats.dueToday} due card${stats.dueToday !== 1 ? 's' : ''}`
-    : 'Start Review'
+    : 'Review'
 
   return (
     <motion.div
@@ -436,35 +436,68 @@ export function TopicDetailPage() {
           </p>
         )}
 
-        {/* Start review button */}
-        <motion.button
-          type="button"
-          onClick={() => navigate(`/review/${slug}`)}
-          whileTap={{ scale: 0.96 }}
-          transition={spring}
-          aria-label={`${reviewButtonLabel} for ${topic.title}`}
-          style={{
-            width: '100%',
-            padding: '18px 24px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: 'var(--accent)',
-            color: 'var(--color-on-accent)',
-            fontFamily: 'DM Sans, sans-serif',
-            fontSize: '17px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            minHeight: '56px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          {reviewButtonLabel}
-          <ChevronRight />
-        </motion.button>
+        {/* Session mode buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+          {/* Review button — FSRS-gated, primary CTA */}
+          <motion.button
+            type="button"
+            onClick={() => navigate(`/review/${slug}?mode=review`)}
+            whileTap={{ scale: 0.96 }}
+            transition={spring}
+            aria-label={`${reviewButtonLabel} for ${topic.title}`}
+            style={{
+              width: '100%',
+              padding: '18px 24px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'var(--accent)',
+              color: 'var(--color-on-accent)',
+              fontFamily: 'DM Sans, sans-serif',
+              fontSize: '17px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '56px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {reviewButtonLabel}
+            <ChevronRight />
+          </motion.button>
+
+          {/* Fresh Start button — all cards, no SR filter */}
+          <motion.button
+            type="button"
+            onClick={() => navigate(`/review/${slug}?mode=fresh`)}
+            whileTap={{ scale: 0.96 }}
+            transition={spring}
+            aria-label={`Fresh start — all ${topic.cards.length} cards for ${topic.title}`}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: '0.5px solid var(--bg-border)',
+              backgroundColor: 'var(--bg-surface)',
+              color: 'var(--text-secondary)',
+              fontFamily: 'DM Sans, sans-serif',
+              fontSize: '15px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              minHeight: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Fresh Start · all {topic.cards.length} cards
+          </motion.button>
+        </div>
 
         {/* Card count */}
         <p

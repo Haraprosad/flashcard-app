@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useAuthStore } from '../../src/stores/authStore'
 import { useTopicStore } from '../../src/stores/topicStore'
 import { progressStore, getHeatmapLevel } from '../../src/stores/progressStore'
+import { srStateService } from '../../src/services/srStateService'
 import { ProgressPage } from '../../src/pages/ProgressPage'
 import type { StreakData, FlashCard, CardSRData, SRState, TopicFile } from '../../src/types'
 
@@ -32,9 +33,6 @@ function todayStr(): string {
 }
 
 Before(function () {
-  localStorage.removeItem('streak_data')
-  localStorage.removeItem('review_log')
-  localStorage.removeItem('sr_state')
   useAuthStore.setState({ accessToken: 'test-token', userEmail: 'test@example.com' })
   useTopicStore.setState({ topics: {}, loading: {}, error: {}, sessionFetchedAt: {} })
   this.testCount = 0
@@ -43,9 +41,6 @@ Before(function () {
 
 After(function () {
   cleanup()
-  localStorage.removeItem('streak_data')
-  localStorage.removeItem('review_log')
-  localStorage.removeItem('sr_state')
   useAuthStore.setState({ accessToken: null, userEmail: null })
   useTopicStore.setState({ topics: {}, loading: {}, error: {}, sessionFetchedAt: {} })
 })
@@ -54,18 +49,16 @@ After(function () {
 
 Given('the user has not reviewed any cards today', function () {
   const yesterday = dateOffset(-1)
-  const streakData: StreakData = { current: 0, longest: 0, last_review_date: yesterday }
-  localStorage.setItem('streak_data', JSON.stringify(streakData))
+  progressStore._setStreakDataForTests({ current: 0, longest: 0, last_review_date: yesterday })
 })
 
 Given('the current streak is set to {int}', function (streak: number) {
-  const existing: StreakData = JSON.parse(
-    localStorage.getItem('streak_data') ?? '{"current":0,"longest":0,"last_review_date":null}',
-  )
-  localStorage.setItem(
-    'streak_data',
-    JSON.stringify({ ...existing, current: streak, longest: Math.max(existing.longest ?? 0, streak) }),
-  )
+  const existing = progressStore.getStreakData()
+  progressStore._setStreakDataForTests({
+    ...existing,
+    current: streak,
+    longest: Math.max(existing.longest, streak),
+  })
 })
 
 When('the user completes at least 1 card review', function () {
@@ -88,7 +81,7 @@ Then('the streak remains {int}', function (expected: number) {
 
 Then('"last_review_date" in localStorage is set to today', function () {
   const today = todayStr()
-  const data: StreakData = JSON.parse(localStorage.getItem('streak_data') ?? '{}')
+  const data = progressStore.getStreakData()
   if (data.last_review_date !== today)
     throw new Error(`Expected last_review_date "${today}" but got "${data.last_review_date}"`)
 })
@@ -97,8 +90,7 @@ Then('"last_review_date" in localStorage is set to today', function () {
 
 Given('"last_review_date" is 2 days ago', function () {
   const twoDaysAgo = dateOffset(-2)
-  const streakData: StreakData = { current: 5, longest: 7, last_review_date: twoDaysAgo }
-  localStorage.setItem('streak_data', JSON.stringify(streakData))
+  progressStore._setStreakDataForTests({ current: 5, longest: 7, last_review_date: twoDaysAgo })
   this.savedLongest = 7
 })
 
@@ -117,8 +109,8 @@ Then('the longest streak is preserved', function () {
 
 Given('the user has already reviewed cards today', function () {
   const today = todayStr()
-  localStorage.setItem('review_log', JSON.stringify({ [today]: 1 }))
-  localStorage.setItem('streak_data', JSON.stringify({ current: 0, longest: 0, last_review_date: today }))
+  progressStore._setReviewLogForTests({ [today]: 1 })
+  progressStore._setStreakDataForTests({ current: 0, longest: 0, last_review_date: today })
 })
 
 // ─── Heatmap scenarios ───────────────────────────────────────────────────────
@@ -128,7 +120,7 @@ Given('the user has review log entries for the last 90 days', function () {
   for (let i = 0; i < 90; i++) {
     log[dateOffset(-i)] = i + 1
   }
-  localStorage.setItem('review_log', JSON.stringify(log))
+  progressStore._setReviewLogForTests(log)
 })
 
 When('the progress page loads', async function () {
@@ -202,9 +194,8 @@ Given('"kubernetes" has {int} cards', function (count: number) {
 
 Given('{int} cards have state=Review and reps>=3', function (count: number) {
   const cards = this.kubernetesCards as FlashCard[]
-  const srState: SRState = {}
   for (let i = 0; i < count; i++) {
-    const srData: CardSRData = {
+    srStateService.updateCard(cards[i].id, {
       due: new Date(Date.now() + 86400000).toISOString(),
       stability: 10,
       difficulty: 5,
@@ -214,10 +205,8 @@ Given('{int} cards have state=Review and reps>=3', function (count: number) {
       lapses: 0,
       state: 2,
       last_review: new Date().toISOString(),
-    }
-    srState[cards[i].id] = srData
+    })
   }
-  localStorage.setItem('sr_state', JSON.stringify(srState))
 })
 
 Then('the {string} mastery percentage is {int}%', async function (topicTitle: string, pct: number) {
@@ -230,7 +219,7 @@ Then('the {string} mastery percentage is {int}%', async function (topicTitle: st
 // ─── Total stats ─────────────────────────────────────────────────────────────
 
 Given('the review_log shows {int} total reviews', function (count: number) {
-  localStorage.setItem('review_log', JSON.stringify({ [todayStr()]: count }))
+  progressStore._setReviewLogForTests({ [todayStr()]: count })
 })
 
 Then('the total reviews stat shows {int}', async function (count: number) {

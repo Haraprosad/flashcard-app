@@ -1,12 +1,14 @@
-import { useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useCallback, useRef, useState } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
 import { useTopicStore } from '../stores/topicStore'
 import { useReviewStore } from '../stores/reviewStore'
+import type { SessionMode } from '../stores/reviewStore'
 import { SwipeCardStack } from '../components/SwipeCardStack'
 import { RatingBar } from '../components/RatingBar'
 import { SessionComplete } from '../components/SessionComplete'
+import { ExplorationCard } from '../components/ExplorationCard'
 import type { Rating } from '../types'
 
 function XIcon() {
@@ -20,6 +22,8 @@ function XIcon() {
 export function ReviewSessionPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const mode = (searchParams.get('mode') ?? 'review') as SessionMode
   const accessToken = useAuthStore((s) => s.accessToken)
   const fetchTopic = useTopicStore((s) => s.fetchTopic)
   const getAllCachedCards = useTopicStore((s) => s.getAllCachedCards)
@@ -33,29 +37,44 @@ export function ReviewSessionPage() {
   const reviewedCount = useReviewStore((s) => s.reviewedCount)
   const isComplete = useReviewStore((s) => s.isComplete)
   const topicSlug = useReviewStore((s) => s.topicSlug)
+  const driveSyncStatus = useReviewStore((s) => s.driveSyncStatus)
   const loadSession = useReviewStore((s) => s.loadSession)
   const flip = useReviewStore((s) => s.flip)
   const rate = useReviewStore((s) => s.rate)
+  const advanceExploration = useReviewStore((s) => s.advanceExploration)
 
   const currentCard = queue[currentIndex] ?? null
   const nextCard = queue[currentIndex + 1] ?? null
 
-  // Load cards and start session
+  // sessionKey increments whenever the store is reset ("Review again")
+  // so the init effect re-runs without a page reload.
+  const [sessionKey, setSessionKey] = useState(0)
+  const prevTopicSlug = useRef<string | null | undefined>(undefined)
+
+  useEffect(() => {
+    // On first run prevTopicSlug is undefined — skip.
+    // On subsequent runs, if topicSlug becomes null (reset), bump the key.
+    if (prevTopicSlug.current !== undefined && topicSlug === null && prevTopicSlug.current !== null) {
+      setSessionKey((k) => k + 1)
+    }
+    prevTopicSlug.current = topicSlug
+  }, [topicSlug])
+
   useEffect(() => {
     async function init() {
       if (!slug || !accessToken) return
 
       if (slug === 'all') {
         const cachedCards = getAllCachedCards()
-        loadSession('all', cachedCards)
+        loadSession('all', cachedCards, mode)
       } else {
         const topic = await fetchTopic(slug, accessToken)
         const cards = topic?.cards ?? getCardsByTopic(slug)
-        loadSession(slug, cards)
+        loadSession(slug, cards, mode)
       }
     }
     init()
-  }, [slug, accessToken, fetchTopic, getAllCachedCards, getCardsByTopic, loadSession])
+  }, [slug, accessToken, sessionKey, mode, fetchTopic, getAllCachedCards, getCardsByTopic, loadSession])
 
   const handleRate = useCallback(
     (rating: Rating) => {
@@ -110,6 +129,7 @@ export function ReviewSessionPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isFlipped, isComplete, flip, handleRate])
 
+  const isExplorationCard = currentCard?.type === 'exploration'
   const isSessionLoading = topicLoading || (queue.length === 0 && !isComplete)
   const totalInSession = queue.length > 0 ? Math.max(queue.length, reviewedCount) : 0
   const progress = totalInSession > 0 ? reviewedCount / totalInSession : 0
@@ -160,16 +180,36 @@ export function ReviewSessionPage() {
         </motion.button>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <span
-            style={{
-              fontFamily: 'DM Sans, sans-serif',
-              fontSize: '13px',
-              color: 'var(--text-muted)',
-              textTransform: 'capitalize',
-            }}
-          >
-            {titleLabel}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                fontFamily: 'DM Sans, sans-serif',
+                fontSize: '13px',
+                color: 'var(--text-muted)',
+                textTransform: 'capitalize',
+              }}
+            >
+              {titleLabel}
+            </span>
+            <span
+              aria-label={mode === 'fresh' ? 'Fresh Start mode' : 'Review mode'}
+              style={{
+                fontFamily: 'DM Sans, sans-serif',
+                fontSize: '10px',
+                fontWeight: 600,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                padding: '2px 7px',
+                borderRadius: '20px',
+                backgroundColor: mode === 'fresh' ? 'color-mix(in srgb, var(--color-easy) 15%, transparent)' : 'color-mix(in srgb, var(--accent) 15%, transparent)',
+                color: mode === 'fresh' ? 'var(--color-easy)' : 'var(--accent)',
+                border: `0.5px solid ${mode === 'fresh' ? 'color-mix(in srgb, var(--color-easy) 30%, transparent)' : 'color-mix(in srgb, var(--accent) 30%, transparent)'}`,
+                flexShrink: 0,
+              }}
+            >
+              {mode === 'fresh' ? 'Fresh' : 'Review'}
+            </span>
+          </div>
           {/* Progress bar */}
           <div
             role="progressbar"
@@ -210,7 +250,45 @@ export function ReviewSessionPage() {
 
       {/* Main content */}
       {isComplete ? (
-        <SessionComplete reviewedCount={reviewedCount} topicSlug={topicSlug} />
+        <SessionComplete
+            reviewedCount={reviewedCount}
+            topicSlug={topicSlug}
+            driveSyncStatus={driveSyncStatus}
+          />
+      ) : isExplorationCard && currentCard?.steps ? (
+        // Exploration mode — full-screen stepper, no swipe/flip/rating
+        <div
+          data-testid="exploration-mode"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '24px 24px 32px',
+            overflowY: 'auto',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'DM Sans, sans-serif',
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: '20px',
+            }}
+          >
+            Concept Introduction
+          </div>
+          <ExplorationCard
+            steps={currentCard.steps}
+            onComplete={() => {
+              if (currentCard.concept_id) advanceExploration(currentCard.concept_id)
+            }}
+            onSkip={() => {
+              if (currentCard.concept_id) advanceExploration(currentCard.concept_id)
+            }}
+          />
+        </div>
       ) : (
         <div
           style={{
