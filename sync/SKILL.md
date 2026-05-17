@@ -158,7 +158,7 @@ date: [YYYY-MM-DD today]
 tags:
   - permanent
   - [one specific lowercase topic tag, e.g: react, typescript, system-design, learning-science, neuroscience, behavioral-science, economics]
-topic: [Short display name for the flashcard app, e.g: React, TypeScript, Learning Science, Behavioral Science]
+topic: [Short display name for Concept Snap, e.g: React, TypeScript, Learning Science, Behavioral Science]
 source: [Full citation: Author (Year). "Title." Journal/Publisher. OR URL]
 ---
 
@@ -451,7 +451,7 @@ Example: "React useEffect runs after every render by default.md"
 AFTER SAVING, tell me:
 1. The exact file path where you saved it
 2. How many flashcards were written and how many concepts they cover
-3. Remind me to tap "Sync now" in Settings in my flashcard app
+3. Remind me to tap "Sync now" in Settings in Concept Snap
    (this reads the note from Drive and generates the flashcard JSON automatically)
 
 ────────────────────────────────────────────────────────────────────────────────

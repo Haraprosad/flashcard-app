@@ -1,4 +1,4 @@
-# CLAUDE.md — Obsidian Flashcard App
+# CLAUDE.md — Concept Snap
 
 ## Session start — read this first, always
 
@@ -18,7 +18,7 @@ Do not load other files unless the task requires them.
 
 ## What this project is
 
-Spaced-repetition flashcard app. Obsidian vault in Google Drive (`ObsidianSecondBrain/flashcards/`).
+Concept Snap — spaced-repetition learning app. Obsidian vault in Google Drive (`ObsidianSecondBrain/flashcards/`).
 Claude Code sync script writes one JSON per topic to Drive. React app reads lazily, runs FSRS
 locally, stores SR state in localStorage. No backend. Deploys to Netlify.
 
@@ -157,7 +157,7 @@ Primary use: phone, one thumb, often at night.
 ### New component
 ```
 /frontend-design /daticket
-Build [component] for the flashcard app.
+Build [component] for Concept Snap.
 Refined Dark Minimal. DM Serif + DM Sans. Amber #F59E0B. Base #0E0E10.
 Framer Motion per CLAUDE.md animation rules. Run /accessibility-review after.
 ```

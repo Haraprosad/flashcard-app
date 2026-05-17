@@ -1,4 +1,4 @@
-# TASKS.md — Flashcard App
+# TASKS.md — Concept Snap
 > Track progress here. Check boxes as you complete tasks. Never mark a task done until `npm run test:all` passes.
 > Last updated: 2026-05-17
 
@@ -15,7 +15,7 @@
 ## Phase 0: Project Scaffolding
 
 ### 0.1 Init & Tooling
-- [x] `npm create vite@latest flashcard-app -- --template react-ts`
+- [x] `npm create vite@latest concept-snap -- --template react-ts`
 - [x] Install Tailwind CSS v3 and configure `tailwind.config.ts`
 - [x] Install all dependencies from spec section 2
   - [x] `zustand`, `idb`, `ts-fsrs`, `react-swipeable`, `framer-motion`
@@ -122,7 +122,7 @@
   - [x] All functions typed with proper return types
   - [x] Error handling: network error, 401, file not found
 - [x] Create `src/services/indexedDBService.ts`
-  - [x] Open DB `flashcard-app-db` version 1
+  - [x] Open DB `concept-snap-db` version 1
   - [x] `saveIndex(index)`, `getIndex()`
   - [x] `saveTopicFile(slug, data)`, `getTopicFile(slug)`
   - [x] `getTopicFetchedAt(slug)`
@@ -480,7 +480,7 @@
 
 ## Phase 12: Deployment
 
-> **Remote:** `https://github.com/Haraprosad/flashcard-app.git` (main branch)
+> **Remote:** `https://github.com/Haraprosad/concept-snap.git` (main branch)
 > `netlify.toml` already configured: build=`npm run build`, publish=`dist`, Node 20, SPA redirect.
 
 ### 12.1 GitHub Actions CI/CD
@@ -856,7 +856,7 @@
 
 - [ ] Update `TASKS.md` as tasks are completed
 - [ ] Run `npm run test:all` before every git push
-- [ ] Keep `docs/flashcard-app-spec-v2.md` updated if architecture decisions change
+- [ ] Keep `docs/concept-snap-spec-v2.md` updated if architecture decisions change
 - [ ] Keep `docs/BDD-WORKFLOW.md` updated with new feature files as added
 
 ---

@@ -1,4 +1,4 @@
-# Flashcard App — Usage Guide
+# Concept Snap — Usage Guide
 
 > For: `dev.haraprosad@gmail.com`
 > Last updated: 2026-05-17 · Phase 16 complete

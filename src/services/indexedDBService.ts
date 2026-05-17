@@ -9,7 +9,7 @@ interface FlashcardDBSchema {
   'review_log': { key: number; value: { id?: number; date: string; count: number } }
 }
 
-const DB_NAME = 'flashcard-app-db'
+const DB_NAME = 'concept-snap-db'
 const DB_VERSION = 2
 
 let dbPromise: ReturnType<typeof openDB<FlashcardDBSchema>> | null = null

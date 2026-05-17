@@ -1,4 +1,4 @@
-# Flashcard App — Full Product Specification
+# Concept Snap — Full Product Specification
 > Hand this document to any LLM to get a complete understanding of the app before generating tasks, code, or deployment config.
 
 ---
@@ -412,7 +412,7 @@ Exploration cards solve the cold-start problem: flashcards strengthen memories y
 ## 9. IndexedDB schema (via `idb`)
 
 ```typescript
-// Database name: flashcard-app-db  |  Version: 2
+// Database name: concept-snap-db  |  Version: 2
 // Object stores:
 //   cards_cache   — keyPath: 'id'     — stores FlashCard[]
 //
@@ -504,7 +504,7 @@ Features to implement (one `.feature` file each):
 ## 12. Folder structure
 
 ```
-flashcard-app/
+concept-snap/
 ├── public/
 │   └── favicon.svg
 ├── features/

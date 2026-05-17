@@ -1,5 +1,5 @@
 ---
-name: Obsidian Flashcard App
+name: Concept Snap
 description: Personal spaced-repetition study app. Night-native, mobile-first, dark minimal.
 colors:
   amber-accent: "#F59E0B"
@@ -99,7 +99,7 @@ components:
     padding: "12px 24px"
 ---
 
-# Design System: Obsidian Flashcard App
+# Design System: Concept Snap
 
 ## 1. Overview
 

@@ -1,4 +1,4 @@
-# BDD-WORKFLOW.md — Flashcard App
+# BDD-WORKFLOW.md — Concept Snap
 > The complete Behavior-Driven Development workflow. Follow this file top to bottom.
 > Rule: never write implementation code before you have a failing test.
 

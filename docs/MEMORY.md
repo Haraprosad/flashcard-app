@@ -7,7 +7,7 @@
 
 ## What
 
-Spaced-repetition flashcard React app. Source: Obsidian vault → Google Drive
+Concept Snap — spaced-repetition React app. Source: Obsidian vault → Google Drive
 (`ObsidianSecondBrain/flashcards/`). One JSON file per topic. No backend. Netlify deploy.
 Stack: React 19 + TS + Vite 5 + Tailwind v3 + Zustand + ts-fsrs + Framer Motion.
 

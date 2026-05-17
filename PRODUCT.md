@@ -1,4 +1,4 @@
-# Product
+# Concept Snap — Product
 
 ## Register
 

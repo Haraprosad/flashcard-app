@@ -1,4 +1,4 @@
-# Obsidian Flashcard App
+# Concept Snap
 
 > Your Obsidian notes, turned into a science-backed spaced-repetition system.  
 > Built for the way memory actually works — not the way it *feels* like it works.
@@ -252,8 +252,8 @@ Your review data survives everything:
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/Haraprosad/flashcard-app.git
-cd flashcard-app
+git clone https://github.com/Haraprosad/concept-snap.git
+cd concept-snap
 npm install
 ```
 
@@ -310,7 +310,7 @@ Every note in this system follows a strict, science-backed format defined in [`s
 
 4. The LLM produces a complete Obsidian note — title, explanation, flashcards, exploration card, spaced review log — all following the science-backed template.
 5. Save the output as a `.md` file into your Obsidian vault in Google Drive (`ObsidianSecondBrain/flashcards/`).
-6. In the flashcard app, tap **Sync now** in Settings to load the new topic.
+6. In Concept Snap, tap **Sync now** in Settings to load the new topic.
 
 ### Approach 2 — Automated (Claude Code + Google Drive MCP)
 
@@ -338,7 +338,7 @@ Claude Code will:
 4. Save it directly to the correct folder in your Google Drive vault.
 5. Report the file path, flashcard count, and remind you to sync.
 
-Then in the flashcard app, tap **Sync now** in Settings. The new topic appears immediately.
+Then in Concept Snap, tap **Sync now** in Settings. The new topic appears immediately.
 
 ### What SKILL.md controls
 
